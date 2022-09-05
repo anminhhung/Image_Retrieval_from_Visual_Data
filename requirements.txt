@@ -1,0 +1,8 @@
+pytorch-lightning==1.7.4
+timm==0.6.7
+opencv-python
+numpy==1.23.2
+pandas==1.4.4
+jpeg4py==0.1.4
+scikit-learn==1.1.2 
+albumentations==1.2.1

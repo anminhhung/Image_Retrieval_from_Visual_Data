@@ -15,7 +15,7 @@
   ├── data_loader/ - anything about data loading goes here
   │   └── data_loaders.py
   |
-  ├── nets/ - this folder contains any net of your project.
+  ├── model/ - this folder contains any net of your project.
   │   ├── model.py
   │   ├── metric.py
   │   └── loss.py
