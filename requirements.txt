@@ -1,8 +1,18 @@
-pytorch-lightning==1.7.4
-timm==0.6.7
-opencv-python
-numpy==1.23.2
-pandas==1.4.4
-jpeg4py==0.1.4
-scikit-learn==1.1.2 
+# torch==1.6.0a0+9907a3e
+resnest==0.0.6b20201012
+pandas==0.24.2
+# torchvision==0.7.0a0
+warmup_scheduler
+tqdm==4.31.1
+opencv_python==4.4.0.44
+numpy==1.18.5
+scikit_learn==1.1.2 
+timm==0.4.12
 albumentations==1.2.1
+neptune-client==0.9.16
+# transformers==4.6.1x`
+geffnet==1.0.2
+efficientnet-pytorch==0.7.1
+pytorch-lightning==1.6.4
+timm==0.6.7
+jpeg4py==0.1.4

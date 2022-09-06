@@ -13,7 +13,7 @@ from pytorch_lightning import LightningModule
 
 from model.gem_pool import GeM
 from model.arcface import ArcFace
-from data_loader.dataset import LmkRetrDataset
+from dataset.dataset import LmkRetrDataset
 
 from timm.models.efficientnet import _cfg, tf_efficientnet_b5_ns
 
@@ -379,20 +379,14 @@ class Net_Lightning(LightningModule):
         margins = (tmp - tmp.min()) / (tmp.max() - tmp.min()) * 0.45 + 0.05
         self.margins = margins
 
-        # self.backbone = timm.create_model(cfg.backbone,
-        #                                   pretrained=True,
-        #                                   in_chans=self.cfg.in_channels, 
-        #                                   num_classes = 17,
-        #                                   features_only=True)
-        
         self.backbone = timm.create_model(cfg.backbone,
                                           pretrained=True,
                                           in_chans=self.cfg.in_channels, 
-                                          num_classes = 17)
+                                          num_classes = 17,
+                                          features_only=True)
 
-
-        # if ("efficientnet" in cfg.backbone) & (self.cfg.stride is not None):
-        #     self.backbone.conv_stem.stride = self.cfg.stride
+        if ("efficientnet" in cfg.backbone) & (self.cfg.stride is not None):
+            self.backbone.conv_stem.stride = self.cfg.stride
         backbone_out = self.backbone.feature_info[-1]['num_chs']
         backbone_out_1 = self.backbone.feature_info[-2]['num_chs']
 
@@ -472,6 +466,7 @@ class Net_Lightning(LightningModule):
         optimizer = optim.Adam(self.parameters(), lr=self.cfg.lr)
         return optimizer
 
+    @classmethod
     def criterion(self,logits_m, target):
         arc = ArcFaceLossAdaptiveMargin(margins=self.margins, s=80)
         loss_m = arc(logits_m, target, self.cfg.output_dim)
@@ -481,7 +476,7 @@ class Net_Lightning(LightningModule):
         
         data, target = train_batch
         # logits_m = self.forward(data)
-        logits_m = self(data)
+        logits_m = self.head(self.forward(data))
         loss = self.criterion(logits_m, target)
         self.log('train_loss', loss)
         return loss.detach().cpu().numpy()

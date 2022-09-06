@@ -1,69 +1,79 @@
 import os
-import jpeg4py as jpeg
+import cv2
+import numpy as np
 import pandas as pd
-from sklearn import preprocessing
+import albumentations
 import torch
 from torch.utils.data import Dataset
-from data_loader.transform import image_transform
-from config import Config
-# from config import EfficientnetB5_Config as cfg
-from torchvision import transforms
-import albumentations as A
-import albumentations.pytorch
-import cv2
 
 
-import numpy as np
+class LandmarkDataset(Dataset):
+    def __init__(self, csv, split, mode, transform=None):
 
-
-def img_path_from_id(id):
-    split_id = id.split("_")
-    sub_folder = "_".join(split_id[:-1])
-    img_path = os.path.join(Config.DATA_DIR, 'train',
-                            sub_folder, f'{id}.jpg')
-    return img_path
-
-
-class LmkRetrDataset(Dataset):
-    def __init__(self):
-        self.df = pd.read_csv(Config.CSV_PATH)
-        self.landmark_id_encoder = preprocessing.LabelEncoder()
-        self.df['landmark_id'] = self.landmark_id_encoder.fit_transform(
-            self.df['landmark_id'])
-        self.df['path'] = self.df['id'].apply(img_path_from_id)
-        self.paths = self.df['path'].values
-        self.ids = self.df['id'].values
-        self.landmark_ids = self.df['landmark_id'].values
-        self.transform = image_transform
-        # self.mode = mode
+        self.csv = csv.reset_index()
+        self.split = split
+        self.mode = mode
+        self.transform = transform
 
     def __len__(self):
-        return len(self.df)
-      
-    def __getitem__(self, idx):
-        path, id, landmark_id = self.paths[idx], self.ids[idx], self.landmark_ids[idx]
-        # img = cv2.imread(path)[:,:,::-1]
-        # img = img.astype(np.float32)
+        return self.csv.shape[0]
 
-        img = cv2.imread(path)
-        image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    def __getitem__(self, index):
+        row = self.csv.iloc[index]
+
+        image = cv2.imread(row.filepath.replace("$",""))[:,:,::-1]
+
+        if self.transform is not None:
+            res = self.transform(image=image)
+            image = res['image'].astype(np.float32)
+        else:
+            image = image.astype(np.float32)
+
+        image = image.transpose(2, 0, 1)
+        if self.mode == 'test':
+            return torch.tensor(image)
+        else:
+            return torch.tensor(image), torch.tensor(row.landmark_id)
+
+
+def get_transforms(image_size):
+
+    transforms_train = albumentations.Compose([
+        albumentations.HorizontalFlip(p=0.5),
+        albumentations.ImageCompression(quality_lower=99, quality_upper=100),
+        albumentations.ShiftScaleRotate(shift_limit=0.2, scale_limit=0.2, rotate_limit=10, border_mode=0, p=0.7),
+        albumentations.Resize(image_size, image_size),
+        albumentations.Cutout(max_h_size=int(image_size * 0.4), max_w_size=int(image_size * 0.4), num_holes=1, p=0.5),
+        albumentations.Normalize()
+    ])
+
+    transforms_val = albumentations.Compose([
+        albumentations.Resize(image_size, image_size),
+        albumentations.Normalize()
+    ])
+
+    return transforms_train, transforms_val
+
+
+def get_df(kernel_type, data_dir, train_step):
+
+    # df = pd.read_csv('train_list.txt')
+
+    train_list_name = 'train/train_list.txt'
+    # if train_step == 0:
+    #     df_train = pd.read_csv(os.path.join(data_dir, train_list_name))
+    # else:
+    #     cls_81313 = df.landmark_id.unique()
+    #     df_train = pd.read_csv(os.path.join(data_dir, train_list_name)).drop(columns=['url']).set_index('landmark_id').loc[cls_81313].reset_index()
         
-        # auto = A.Compose([
-        #     A.Resize(768,768),
-        #     A.Normalize(),
-        #     A.pytorch.transforms.ToTensorV2()
-        # ])
-        
-        MEAN = [0.485, 0.456, 0.406]
-        STD = [0.229, 0.224, 0.225]
+    df_train = pd.read_csv(os.path.join(data_dir.replace("$",""), train_list_name))
+    df_train['filepath'] = df_train['id'].apply(lambda x: os.path.join(data_dir, 'train',"_".join(x.split("_")[:-1]), f'{x}.jpg'))
+    # df = df_train.merge(df, on=['id','landmark_id'], how='left')
 
-        transform = transforms.Compose([
-            transforms.ToPILImage(),
-            transforms.Resize((768, 768)),
-            transforms.ToTensor(),
-            transforms.Normalize(MEAN, STD),
-        ])
+    landmark_id2idx = {landmark_id: idx for idx, landmark_id in enumerate(sorted(df_train['landmark_id'].unique()))}
+    idx2landmark_id = {idx: landmark_id for idx, landmark_id in enumerate(sorted(df_train['landmark_id'].unique()))}
+    df_train['landmark_id'] = df_train['landmark_id'].map(landmark_id2idx)
 
-        img = transform(img)
+    out_dim = df_train.landmark_id.nunique()
 
-        return img, torch.tensor(landmark_id)
+    return df_train, out_dim

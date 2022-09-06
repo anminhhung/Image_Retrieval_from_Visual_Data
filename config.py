@@ -3,7 +3,7 @@ import pandas as pd
 import cv2
 
 class Config:
-    DATA_DIR = 'data'
+    DATA_DIR = '/content/drive/MyDrive/AIC_HCM/DOLG/DOLG-pytorch/dataset/data'
     MODEL_DIR = '/content/drive/MyDrive/AIC_HCM/DOLG/DOLG-pytorch/model/weights'
     LOG_DIR = '/content/drive/MyDrive/AIC_HCM/DOLG/DOLG-pytorch/model/logs'
 
@@ -13,14 +13,13 @@ class Config:
 
     
     # CSV_PATH = os.path.join(DATA_DIR, 'train/train_list.txt')
-    CSV_PATH = "data/train/train_list.txt"
+    CSV_PATH = "/content/drive/.shortcut-targets-by-id/16sHXxeyDT8ujcHkEcNcq0PrZlM8MvoJF/DOLG-pytorch/dataset/data/train/train_list.txt"
     
 
     train_batch_size = 32
     val_batch_size = 10
     num_workers = 2
-    # image_size = 224
-    image_size = 768 
+    image_size = 224
 
     output_dim = 224
     hidden_dim = 1024
@@ -45,14 +44,16 @@ class Config:
     # stride = 2 
 
 class EfficientnetB5_Config:
+    input_dim = 3
+
+
     debug = True
-    seed = 42
 
     stride = 2    
     # paths
     name = os.path.basename(__file__).split(".")[0]
     # data_dir = "/content/drive/MyDrive/AIC_HCM/DOLG/DOLG-pytorch/dataset/data/"
-    data_dir = "data/"
+    data_dir = "/content/drive/.shortcut-targets-by-id/16sHXxeyDT8ujcHkEcNcq0PrZlM8MvoJF/DOLG-pytorch/dataset/data/"
 
     data_folder = data_dir + "train/"
     train_df = "/mount/glr2021/data/2021/train_gldv2x.csv"
@@ -80,7 +81,6 @@ class EfficientnetB5_Config:
     model = "ch_mdl_dolg_efficientnet"
     dilations = [6,12,18]
     backbone = "tf_efficientnet_b5_ns"
-    # backbone = "resnet101"
     neck = "option-D"
     embedding_size = 512
     pool = "gem"
@@ -91,7 +91,8 @@ class EfficientnetB5_Config:
     # DATASET
     dataset = "ch_ds_1"
     normalization = 'imagenet'
-    landmark_id2class_id = pd.read_csv('data/train/train_list.txt')
+    # landmark_id2class_id = pd.read_csv('/content/drive/MyDrive/AIC_HCM/DOLG/DOLG-pytorch/dataset/data/train/train_list.txt')
+    landmark_id2class_id = pd.read_csv('/content/drive/.shortcut-targets-by-id/16sHXxeyDT8ujcHkEcNcq0PrZlM8MvoJF/DOLG-pytorch/dataset/data/train/train_list.txt')
     num_workers = 0
     # data_sample = 100000
     loss = 'adaptive_arcface'
@@ -126,4 +127,6 @@ class EfficientnetB5_Config:
     img_size = (768,768)
 
     n_classes=17
+    num_of_classes = 17
     headless = False
+
