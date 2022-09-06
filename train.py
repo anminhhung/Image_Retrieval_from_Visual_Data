@@ -1,8 +1,8 @@
 from origin_models import DenseCrossEntropy, Swish_module, ArcFaceLossAdaptiveMargin
 from config import EfficientnetB5_Config as cfg
-from origin_models import Effnet_Landmark
-from util import global_average_precision_score, GradualWarmupSchedulerV2
-from dataset import LandmarkDataset, get_df, get_transforms
+from model.models import Effnet_Landmark
+from utils.util import global_average_precision_score, GradualWarmupSchedulerV2
+from data_loader.dataset import LandmarkDataset, get_df, get_transforms
 from apex.parallel import DistributedDataParallel
 from apex import amp
 import apex

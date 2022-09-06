@@ -8,9 +8,9 @@ from torch.utils.data import DataLoader
 from pytorch_lightning import LightningModule
 
 from config import Config
-from model.gem_pool import GeM
-from model.arcface import ArcFace
-from dataset.dataset import LmkRetrDataset
+from gem_pool import GeM
+from arcface import ArcFace
+from data_loader.dataset import LmkRetrDataset
 
 
 class MultiAtrous(nn.Module):

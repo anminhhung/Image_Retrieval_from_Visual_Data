@@ -15,7 +15,7 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 import torch.nn as nn
 import torch.nn.functional as F
-from models import Effnet_Landmark
+from model.models import Effnet_Landmark
 import geffnet
 
 # If tqdm error => pip install tqdm --upgrade
@@ -223,7 +223,7 @@ if __name__ == '__main__':
     backbone='tf_efficientnet_b5_ns'
     data_dir = './data/train/'
     model_dir = './weights/'
-    weight_path= './weights/b5ns_DDP_final_256_300w_f2_10ep_fold2.pth'
+    weight_path= '.saved/models/weights/b5ns_DDP_final_256_300w_f2_10ep_fold2.pth'
     transforms = albumentations.Compose([
         albumentations.Resize(image_size, image_size),
         albumentations.Normalize()
