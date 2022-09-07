@@ -2,7 +2,7 @@
 
 ---
 
-##Requirements
+## Requirements
 
 ```
 pip install -r requirements.txt
@@ -36,7 +36,7 @@ If you want run with others kernel-type. Check github: https://github.com/haqish
 ```
 
 ---
-+ Folder Structure
+## Folder Structure
 
 ```
   Main-folder/
