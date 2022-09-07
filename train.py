@@ -1,6 +1,5 @@
-from model.models import DenseCrossEntropy, Swish_module, ArcFaceLossAdaptiveMargin
+from model.models import DenseCrossEntropy, Swish_module, ArcFaceLossAdaptiveMargin,Effnet_Landmark
 from config import EfficientnetB5_Config as cfg
-from model.models import Effnet_Landmark
 from utils.util import global_average_precision_score, GradualWarmupSchedulerV2
 from data_loader.dataset import LandmarkDataset, get_df, get_transforms
 from apex.parallel import DistributedDataParallel
@@ -23,16 +22,10 @@ import argparse
 import random
 import pickle
 import time
-import math
-import cv2
 import os
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
-
-
-# from models import , Effnet_Landmark, RexNet20_Landmark, ResNest101_Landmark
-# from models import Net
 
 
 def parse_args():
@@ -155,23 +148,12 @@ def main():
         1 / np.sqrt(df['landmark_id'].value_counts().sort_index().values))
     margins = (tmp - tmp.min()) / (tmp.max() - tmp.min()) * 0.45 + 0.05
 
-    # get augmentations
+    # get augmentations (Resize and Normalize)
     transforms_train, transforms_val = get_transforms(args.image_size)
-
-    # get train and valid dataset
-    # df_train = df[df['fold'] != args.fold]
-    # df_valid = df[df['fold'] == args.fold].reset_index(drop=True).query("index % 15==0")
-
-    # dataset_train = LandmarkDataset(df_train, 'train', 'train', transform=transforms_train)
-    # dataset_valid = LandmarkDataset(df_valid, 'train', 'val', transform=transforms_val)
 
     dataset_train = LandmarkDataset(
         df, 'train', 'train', transform=transforms_train)
-    # dataset_valid = LandmarkDataset(df_valid, 'train', 'val')
-    # valid_loader = torch.utils.data.DataLoader(dataset_valid, batch_size=args.batch_size, num_workers=args.num_workers)
 
-    # model
-    # model = ModelClass(cfg = cfg, margins=margins)
     model = ModelClass(args.enet_type, out_dim=out_dim)
     model = model.cuda()
     model = apex.parallel.convert_syncbn_model(model)
@@ -234,21 +216,18 @@ def main():
         # val_loss, acc_m, gap_m = val_epoch(model, valid_loader, criterion)
 
         if args.local_rank == 0:
-            # content = time.ctime() + ' ' + f'Fold {args.fold}, Epoch {epoch}, lr: {optimizer.param_groups[0]["lr"]:.7f}, train loss: {np.mean(train_loss):.5f}, valid loss: {(val_loss):.5f}, acc_m: {(acc_m):.6f}, gap_m: {(gap_m):.6f}.'
             content = time.ctime() + ' ' + \
                 f'Fold {args.fold}, Epoch {epoch}, lr: {optimizer.param_groups[0]["lr"]:.7f}, train loss: {np.mean(train_loss):.5f}.'
             print(content)
-            # write log
-            # with open(os.path.join(args.log_dir, f'{args.kernel_type}.txt'), 'a') as appender:
-            #     appender.write(content + '\n')
+           
 
-            # print('gap_m_max ({:.6f} --> {:.6f}). Saving model ...'.format(gap_m_max, gap_m))
+            print('Saving model ...')
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
             }, model_file)
-            # gap_m_max = gap_m
+           
 
         if epoch == args.stop_at_epoch:
             print(time.ctime(), 'Training Finished!')
@@ -267,14 +246,6 @@ if __name__ == '__main__':
     os.makedirs(args.model_dir, exist_ok=True)
     os.makedirs(args.log_dir, exist_ok=True)
     os.environ['CUDA_VISIBLE_DEVICES'] = args.CUDA_VISIBLE_DEVICES
-
-    # if args.enet_type == 'nest101':
-    #     ModelClass = ResNest101_Landmark
-    # elif args.enet_type == 'rex20':
-    #     ModelClass = RexNet20_Landmark
-    # else:
-    #     ModelClass = Effnet_Landmark
-    # ModelClass = Net
     ModelClass = Effnet_Landmark
 
     set_seed(0)

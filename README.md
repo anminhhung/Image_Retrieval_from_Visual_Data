@@ -33,7 +33,7 @@ model_dir='./save/models/weight/'
 **Predict**
 
 ```
-!python predict.py
+!python predict.py --backbone tf_efficientnet_b5_ns
 ```
 
 ---

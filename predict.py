@@ -17,6 +17,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from model.models import Effnet_Landmark
 import geffnet
+import argparse
 
 # If tqdm error => pip install tqdm --upgrade
 
@@ -131,7 +132,7 @@ def get(query_loader, test_loader, model_b5, pred_mask,device="cuda"):
           feat = torch.cat([feat_b5],dim=1)
           feat = F.normalize(feat)
 
-          probs_m = probs_m/9
+          #probs_m = probs_m/9
           probs_m[:, pred_mask] += 1.0
           probs_m -= 1.0              
 
@@ -155,6 +156,14 @@ def get(query_loader, test_loader, model_b5, pred_mask,device="cuda"):
         
         return PRODS, PREDS, PRODS_M,PREDS_M
  
+
+def parse_args():
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--backbone', type=str, default="tf_efficientnet_b5_ns")
+    args, _ = parser.parse_known_args()
+    return args
+
 def main():
     df = pd.read_csv(os.path.join(data_dir, 'train_list.txt'))
     df['filepath'] = df['id'].apply(lambda x: os.path.join(data_dir, '_'.join(x.split("_")[:-1]), f'{x}.jpg'))
@@ -177,7 +186,7 @@ def main():
     test_loader = torch.utils.data.DataLoader(dataset_test, batch_size=batch_size, num_workers=num_workers)
 
     # model_b5 = Effnet_Landmark("tf_efficientnet_b5_ns", out_dim=17)
-    model_b5 = enet_arcface_FINAL(backbone, out_dim=out_dim).to(device)
+    model_b5 = enet_arcface_FINAL(args.backbone, out_dim=out_dim).to(device)
     model_b5 = load_model(model_b5, weight_path)
 
     landmark_id2idx = {landmark_id:idx for idx, landmark_id in enumerate(sorted(df['landmark_id'].unique()))}
@@ -212,6 +221,7 @@ def main():
     print(df_sub.head())
     
 if __name__ == '__main__': 
+    args = parse_args()
     device = torch.device('cuda')
     batch_size = 16
     num_workers = 2
@@ -220,10 +230,10 @@ if __name__ == '__main__':
     TOP_K = 5
     CLS_TOP_K = 5
 
-    backbone='tf_efficientnet_b5_ns'
-    data_dir = './data/train/'
-    #model_dir = './weights/'
-    weight_path= './saved/models/weights/b5ns_DDP_final_256_300w_f2_10ep_fold2.pth'
+    
+    data_dir = '/content/drive/MyDrive/AIC_HCM/DOLG/DOLG_Efficientnet_3rd_2020/data/train/'
+    model_dir = './weights/'
+    weight_path= '/content/drive/MyDrive/AIC_HCM/DOLG/DOLG_Efficientnet_3rd_2020/weights/b5ns_DDP_final_256_300w_f2_10ep_fold2.pth'
     transforms = albumentations.Compose([
         albumentations.Resize(image_size, image_size),
         albumentations.Normalize()
