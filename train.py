@@ -1,4 +1,4 @@
-from origin_models import DenseCrossEntropy, Swish_module, ArcFaceLossAdaptiveMargin
+from model.models import DenseCrossEntropy, Swish_module, ArcFaceLossAdaptiveMargin
 from config import EfficientnetB5_Config as cfg
 from model.models import Effnet_Landmark
 from utils.util import global_average_precision_score, GradualWarmupSchedulerV2

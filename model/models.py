@@ -8,7 +8,7 @@ from torch.autograd import Variable
 from torch.hub import load_state_dict_from_url
 from torchvision.models.resnet import ResNet, Bottleneck
 import geffnet
-from rexnetv1 import ReXNetV1
+from model.rexnetv1 import ReXNetV1
 from resnest.torch import resnest101
 
 
