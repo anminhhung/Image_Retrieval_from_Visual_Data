@@ -1,7 +1,14 @@
 <h1>HCM AI CHALLENGE 2022 - Event Retrieval from Visual Data</h1>
-+ Requirements
-pip install -r requirements.txt
 
+---
+
+##Requirements
+
+```
+pip install -r requirements.txt
+```
+
+---
 ## Setup 
 **If apex folder is not exist**
 
@@ -19,7 +26,7 @@ model_dir='./save/models/weight/'
 ## Efficient B5 ##
 !python -u -m torch.distributed.launch --nproc_per_node=1 train.py --kernel-type b5ns_DDP_final_256_300w_f2_10ep --train-step 0 --data-dir ${data_dir} --image-size 256 --batch-size 32 --enet-type tf_efficientnet_b5_ns --n-epochs 10 --fold 2  --CUDA_VISIBLE_DEVICES 0
 
-## If you want run with others kernel-type. Check github: https://github.com/haqishen/Google-Landmark-Recognition-2020-3rd-Place-Solution ##
+If you want run with others kernel-type. Check github: https://github.com/haqishen/Google-Landmark-Recognition-2020-3rd-Place-Solution 
 ```
 
 **Predict**
