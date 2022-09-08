@@ -1,4 +1,3 @@
-from model.models import DenseCrossEntropy, Swish_module, ArcFaceLossAdaptiveMargin,Effnet_Landmark
 from model.DOLG import DenseCrossEntropy, Swish_module, ArcFaceLossAdaptiveMargin,DOLG
 from utils.util import global_average_precision_score, GradualWarmupSchedulerV2
 from data_loader.dataset import LandmarkDataset, get_df, get_transforms
