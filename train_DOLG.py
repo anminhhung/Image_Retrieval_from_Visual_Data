@@ -248,7 +248,6 @@ if __name__ == '__main__':
     os.makedirs(args.model_dir, exist_ok=True)
     os.makedirs(args.log_dir, exist_ok=True)
     os.environ['CUDA_VISIBLE_DEVICES'] = args.CUDA_VISIBLE_DEVICES
-    ModelClass = Effnet_Landmark
 
     set_seed(0)
 
