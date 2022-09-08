@@ -166,7 +166,7 @@ class DOLG(nn.Module):
         self.n_classes = 17
         self.backbone = timm.create_model('tf_efficientnet_b5_ns', 
                                           pretrained=True, 
-                                          num_classes=self.n_classes, 
+                                          num_classes=0, 
                                           global_pool="", 
                                           features_only = True)
 

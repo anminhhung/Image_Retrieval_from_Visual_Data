@@ -19,12 +19,15 @@ pip install -r requirements.txt
 ```
 
 **Train**
-```
-data_dir='./data'
-model_dir='./save/models/weight/'
 
-## Efficient B5 ##
-!python -u -m torch.distributed.launch --nproc_per_node=1 train.py --kernel-type b5ns_DDP_final_256_300w_f2_10ep --train-step 0 --data-dir ${data_dir} --image-size 256 --batch-size 32 --enet-type tf_efficientnet_b5_ns --n-epochs 10 --fold 2  --CUDA_VISIBLE_DEVICES 0
+**Train DOLG**
+```
+python -u -m torch.distributed.launch --nproc_per_node=1 train_DOLG.py --kernel-type b5ns_DDP_final_256_300w_f2_10ep --train-step 0 --data-dir data --image-size 256 --batch-size 32 --n-epochs 10 --fold 2  --CUDA_VISIBLE_DEVICES 0
+```
+
+**Train Swin Transformer**
+```
+python -u -m torch.distributed.launch --nproc_per_node=1 train_swin.py --kernel-type b5ns_DDP_final_256_300w_f2_10ep --train-step 0 --data-dir data --image-size 224 --batch-size 8 --n-epochs 10 --fold 2  --CUDA_VISIBLE_DEVICES 0
 ```
 
 **Note**- If you want run with others kernel-type. Check github: https://github.com/haqishen/Google-Landmark-Recognition-2020-3rd-Place-Solution 

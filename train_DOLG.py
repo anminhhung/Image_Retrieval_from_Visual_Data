@@ -1,5 +1,5 @@
 from model.models import DenseCrossEntropy, Swish_module, ArcFaceLossAdaptiveMargin,Effnet_Landmark
-from model.custom_model import DenseCrossEntropy, Swish_module, ArcFaceLossAdaptiveMargin,DOLG
+from model.DOLG import DenseCrossEntropy, Swish_module, ArcFaceLossAdaptiveMargin,DOLG
 from utils.util import global_average_precision_score, GradualWarmupSchedulerV2
 from data_loader.dataset import LandmarkDataset, get_df, get_transforms
 from apex.parallel import DistributedDataParallel
@@ -36,7 +36,7 @@ def parse_args():
     parser.add_argument('--train-step', type=int, required=True)
     parser.add_argument('--image-size', type=int, required=True)
     parser.add_argument("--local_rank", type=int)
-    parser.add_argument('--enet-type', type=str, required=True)
+    # parser.add_argument('--enet-type', type=str, required=True)
     parser.add_argument('--batch-size', type=int, default=64)
     parser.add_argument('--num-workers', type=int, default=32)
     parser.add_argument('--init-lr', type=float, default=1e-4)
@@ -154,10 +154,8 @@ def main():
     dataset_train = LandmarkDataset(
         df, 'train', 'train', transform=transforms_train)
 
-    # raw
-    model = ModelClass(args.enet_type, out_dim=out_dim)
 
-    # custom model
+    # DOLG model
     model = DOLG()
 
     model = model.cuda()
