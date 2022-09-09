@@ -18,14 +18,15 @@ cfg_b7_step3 = {
         "batch_size":32,
         "num_workers":2,
         "init_lr":0.0001,
-        "n_epochs":10,
+        "n_epochs":2,
         "start_from_epoch":1,
         "use_amp":False,
         "load_pretrain":"Not_load",
         "train_list_file_path":"train/train_list.txt",
         "model_dir":"saved",
         "CUDA_VISIBLE_DEVICES":"0",
-        "arcface_s":80
+        "arcface_s":80,
+        'local_rank': 0
     },
     'inference': {
       "image_size": 256,
