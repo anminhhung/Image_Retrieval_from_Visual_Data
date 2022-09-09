@@ -160,40 +160,46 @@ class OrthogonalFusion(nn.Module):
         return f_fused  
 
 class DOLG(nn.Module):
-    def __init__(self):
+    def __init__(self, cfg):
         super(DOLG, self).__init__()
 
-        self.n_classes = 17
-        self.backbone = timm.create_model('tf_efficientnet_b5_ns', 
-                                          pretrained=True, 
+        self.n_classes = cfg['model']['n_classes']
+        self.backbone = timm.create_model(cfg['model']['backbone'], 
+                                          pretrained=cfg['model']['pretrained'], 
                                           num_classes=0, 
                                           global_pool="", 
                                           features_only = True)
 
         
-        # if ("efficientnet" in cfg.backbone) & (self.cfg.stride is not None):
-        #     self.backbone.conv_stem.stride = self.cfg.stride
+        if ("efficientnet" in cfg.backbone) & (cfg['model']['stride'] is not None):
+            self.backbone.conv_stem.stride = cfg['model']['stride']
+
         backbone_out = self.backbone.feature_info[-1]['num_chs']
         backbone_out_1 = self.backbone.feature_info[-2]['num_chs']
         
         feature_dim_l_g = 1024
         fusion_out = 2 * feature_dim_l_g
 
-        self.global_pool = GeM(p_trainable=True)
+        if cfg['model']['pool'] == "gem":
+            self.global_pool = GeM(p_trainable=cfg['model']['gem_p_trainable'])
+        elif cfg['model']['pool'] == "identity":
+            self.global_pool = torch.nn.Identity()
+        elif cfg['model']['pool'] == "avg":
+            self.global_pool = nn.AdaptiveAvgPool2d(1)
 
         self.fusion_pool = nn.AdaptiveAvgPool2d(1)
-        self.embedding_size = 512
+        self.embedding_size = cfg['model']['embedding_size']
 
         self.neck = nn.Sequential(
-                nn.Linear(fusion_out, 512, bias=True),
-                nn.BatchNorm1d(512),
+                nn.Linear(fusion_out, cfg['model']['embedding_size'], bias=True),
+                nn.BatchNorm1d(cfg['model']['embedding_size']),
                 torch.nn.PReLU()
             )
 
-        self.head_in_units = 512
-        self.head = ArcMarginProduct_subcenter(512, 17)
+        self.head_in_units = cfg['model']['embedding_size']
+        self.head = ArcMarginProduct_subcenter(cfg['model']['embedding_size'], cfg['model']['n_classes'])
     
-        self.mam = MultiAtrousModule(backbone_out_1, feature_dim_l_g, [6,12,18])
+        self.mam = MultiAtrousModule(backbone_out_1, feature_dim_l_g, cfg['model']['dilations'])
         self.conv_g = nn.Conv2d(backbone_out,feature_dim_l_g,kernel_size=1)
         self.bn_g = nn.BatchNorm2d(feature_dim_l_g, eps=0.001, momentum=0.1, affine=True, track_running_stats=True)
         self.act_g =  nn.SiLU(inplace=True)

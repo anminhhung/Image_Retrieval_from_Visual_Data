@@ -22,7 +22,7 @@ pip install -r requirements.txt
 
 **Train DOLG**
 ```
-python -u -m torch.distributed.launch --nproc_per_node=1 train_DOLG.py --kernel-type b5ns_DDP_final_256_300w_f2_10ep --train-step 0 --data-dir data --image-size 256 --batch-size 32 --n-epochs 10 --fold 2  --CUDA_VISIBLE_DEVICES 0
+python -u -m torch.distributed.launch --nproc_per_node=1 train_DOLG.py --config_name dolg_b5_step3
 ```
 
 **Train Swin Transformer**

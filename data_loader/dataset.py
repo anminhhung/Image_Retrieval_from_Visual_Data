@@ -55,9 +55,7 @@ def get_transforms(image_size):
     return transforms_train, transforms_val
 
 
-def get_df(kernel_type, data_dir, train_step):
-
-    train_list_name = 'train/train_list.txt'
+def get_df(data_dir, train_list_name='train/train_list.txt'):
     # if train_step == 0:
     #     df_train = pd.read_csv(os.path.join(data_dir, train_list_name))
     # else:
