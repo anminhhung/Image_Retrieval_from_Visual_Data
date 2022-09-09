@@ -47,7 +47,7 @@ def train_epoch(model, loader, optimizer, criterion):
         data, target = data.cuda(), target.cuda()
         optimizer.zero_grad()
 
-        if not args.use_amp:
+        if not cfg['train']['use_amp']:
             logits_m = model(data)
             loss = criterion(logits_m, target)
             loss.backward()
@@ -173,7 +173,7 @@ def train(cfg):
 
     # train & valid loop
     gap_m_max = 0
-    for epoch in range(args.start_from_epoch, args.n_epochs+1):
+    for epoch in range(cfg['train']['start_from_epoch'], cfg['train']['n_epochs']+1):
 
         print(time.ctime(), 'Epoch:', epoch)
         scheduler_warmup.step(epoch - 1)
@@ -214,34 +214,19 @@ def train(cfg):
 
 if __name__ == '__main__':
     args = parse_args()
-
-    config_file = None 
-    if args.config_name == "dolg_b5_step3":
-        config_file = "dolg_b5_step3.ini"
-    elif args.config_name == "dolg_b6_step3":
-        config_file = "dolg_b6_step3.ini"
-    elif args.config_name == "dolg_b7_step1":
-        config_file = "dolg_b7_step1.ini"
-    elif args.config_name == "dolg_b7_step2":
-        config_file = "dolg_b7_step2.ini"
-    elif args.config_name == "dolg_b7_step3":
-        config_file = "dolg_b7_step3.ini" 
     
-    if config_file == None:
+    if args.config_name == None:
         assert "Wrong config_file.....!"
     
-    config_path = os.path.join("configs", "dolg", config_file)
-
-    cfg = init_config(config_path)
-
+    cfg = init_config(args.config_name)
     os.makedirs(cfg['train']['model_dir'], exist_ok=True)
     os.environ['CUDA_VISIBLE_DEVICES'] = cfg['train']['CUDA_VISIBLE_DEVICES']
 
     set_seed(0)
 
-    if args.CUDA_VISIBLE_DEVICES != '-1':
+    if cfg['train']['CUDA_VISIBLE_DEVICES'] != '-1':
         torch.backends.cudnn.benchmark = True
-        torch.cuda.set_device(args.local_rank)
+        torch.cuda.set_device(cfg['train']['local_rank'])
         torch.distributed.init_process_group(
             backend='nccl', init_method='env://')
         cudnn.benchmark = True
