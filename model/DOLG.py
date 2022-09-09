@@ -171,7 +171,7 @@ class DOLG(nn.Module):
                                           features_only = True)
 
         
-        if ("efficientnet" in cfg.backbone) & (cfg['model']['stride'] is not None):
+        if ("efficientnet" in cfg['model']['backbone']) & (cfg['model']['stride'] is not None):
             self.backbone.conv_stem.stride = cfg['model']['stride']
 
         backbone_out = self.backbone.feature_info[-1]['num_chs']
