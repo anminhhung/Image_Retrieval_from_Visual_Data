@@ -19,7 +19,7 @@ import geffnet
 import argparse
 import timm
 from torch.nn.parameter import Parameter
-
+from configs.config import init_config
 # If tqdm error => pip install tqdm --upgrade
 
 class LandmarkDataset(Dataset):
@@ -45,7 +45,34 @@ class LandmarkDataset(Dataset):
         
         if self.mode == 'test':
             return torch.tensor(image)
+
 #MODEL
+class Swish(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, i):
+        result = i * torch.sigmoid(i)
+        ctx.save_for_backward(i)
+        return result
+    @staticmethod
+    def backward(ctx, grad_output):
+        i = ctx.saved_variables[0]
+        sigmoid_i = torch.sigmoid(i)
+        return grad_output * (sigmoid_i * (1 + i * (1 - sigmoid_i)))
+
+class Swish_module(nn.Module):
+    def forward(self, x):
+        return Swish.apply(x)
+
+class DenseCrossEntropy(nn.Module):
+    def forward(self, x, target):
+        x = x.float()
+        target = target.float()
+        logprobs = torch.nn.functional.log_softmax(x, dim=-1)
+
+        loss = -logprobs * target
+        loss = loss.sum(-1)
+        return loss.mean()
+
 class ArcMarginProduct_subcenter(nn.Module):
     def __init__(self, in_features, out_features, k=3):
         super().__init__()
@@ -63,33 +90,6 @@ class ArcMarginProduct_subcenter(nn.Module):
         cosine_all = cosine_all.view(-1, self.out_features, self.k)
         cosine, _ = torch.max(cosine_all, dim=2)
         return cosine 
-        
-sigmoid = torch.nn.Sigmoid()
-class Swish(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx, i):
-        result = i * sigmoid(i)
-        ctx.save_for_backward(i)
-        return result
-    @staticmethod
-    def backward(ctx, grad_output):
-        i = ctx.saved_variables[0]
-        sigmoid_i = sigmoid(i)
-        return grad_output * (sigmoid_i * (1 + i * (1 - sigmoid_i)))
-
-class Swish_module(nn.Module):
-    def forward(self, x):
-        return Swish.apply(x)
-
-class DenseCrossEntropy(nn.Module):
-    def forward(self, x, target):
-        x = x.float()
-        target = target.float()
-        logprobs = torch.nn.functional.log_softmax(x, dim=-1)
-
-        loss = -logprobs * target
-        loss = loss.sum(-1)
-        return loss.mean()
 
 def gem(x, p=3, eps=1e-6):
     return F.avg_pool2d(x.clamp(min=eps).pow(p), (x.size(-2), x.size(-1))).pow(1./p)
@@ -175,40 +175,46 @@ class OrthogonalFusion(nn.Module):
         return f_fused  
 
 class DOLG(nn.Module):
-    def __init__(self):
+    def __init__(self, cfg):
         super(DOLG, self).__init__()
 
-        self.n_classes = 17
-        self.backbone = timm.create_model('tf_efficientnet_b5_ns', 
-                                          pretrained=True, 
+        self.n_classes = cfg['model']['n_classes']
+        self.backbone = timm.create_model(cfg['model']['backbone'], 
+                                          pretrained=cfg['model']['pretrained'], 
                                           num_classes=0, 
                                           global_pool="", 
                                           features_only = True)
 
         
-        # if ("efficientnet" in cfg.backbone) & (self.cfg.stride is not None):
-        #     self.backbone.conv_stem.stride = self.cfg.stride
+        if ("efficientnet" in cfg['model']['backbone']) & (cfg['model']['stride'] is not None):
+            self.backbone.conv_stem.stride = cfg['model']['stride']
+
         backbone_out = self.backbone.feature_info[-1]['num_chs']
         backbone_out_1 = self.backbone.feature_info[-2]['num_chs']
         
         feature_dim_l_g = 1024
         fusion_out = 2 * feature_dim_l_g
 
-        self.global_pool = GeM(p_trainable=True)
+        if cfg['model']['pool'] == "gem":
+            self.global_pool = GeM(p_trainable=cfg['model']['gem_p_trainable'])
+        elif cfg['model']['pool'] == "identity":
+            self.global_pool = torch.nn.Identity()
+        elif cfg['model']['pool'] == "avg":
+            self.global_pool = nn.AdaptiveAvgPool2d(1)
 
         self.fusion_pool = nn.AdaptiveAvgPool2d(1)
-        self.embedding_size = 512
+        self.embedding_size = cfg['model']['embedding_size']
 
         self.neck = nn.Sequential(
-                nn.Linear(fusion_out, 512, bias=True),
-                nn.BatchNorm1d(512),
+                nn.Linear(fusion_out, cfg['model']['embedding_size'], bias=True),
+                nn.BatchNorm1d(cfg['model']['embedding_size']),
                 torch.nn.PReLU()
             )
 
-        self.head_in_units = 512
-        self.head = ArcMarginProduct_subcenter(512, 17)
+        self.head_in_units = cfg['model']['embedding_size']
+        self.head = ArcMarginProduct_subcenter(cfg['model']['embedding_size'], cfg['model']['n_classes'])
     
-        self.mam = MultiAtrousModule(backbone_out_1, feature_dim_l_g, [6,12,18])
+        self.mam = MultiAtrousModule(backbone_out_1, feature_dim_l_g, cfg['model']['dilations'])
         self.conv_g = nn.Conv2d(backbone_out,feature_dim_l_g,kernel_size=1)
         self.bn_g = nn.BatchNorm2d(feature_dim_l_g, eps=0.001, momentum=0.1, affine=True, track_running_stats=True)
         self.act_g =  nn.SiLU(inplace=True)
@@ -242,19 +248,6 @@ class DOLG(nn.Module):
         logits_m  = self.head(x_emb)
 
         return F.normalize(x_emb), logits_m
-
-    def freeze_weights(self, freeze=[]):
-        for name, child in self.named_children():
-            if name in freeze:
-                for param in child.parameters():
-                    param.requires_grad = False
-
-
-    def unfreeze_weights(self, freeze=[]):
-        for name, child in self.named_children():
-            if name in freeze:
-                for param in child.parameters():
-                    param.requires_grad = True
 
 def load_model(model, model_file):
     state_dict = torch.load(model_file)
@@ -318,9 +311,8 @@ def get(query_loader, test_loader, model, pred_mask,device="cuda"):
  
 
 def parse_args():
-
     parser = argparse.ArgumentParser()
-    parser.add_argument('--backbone', type=str, default="tf_efficientnet_b5_ns")
+    parser.add_argument('--config_name', type=str, required=True)
     args, _ = parser.parse_known_args()
     return args
 
@@ -345,7 +337,7 @@ def main():
     dataset_test = LandmarkDataset(df_test, 'test', 'test',transforms)
     test_loader = torch.utils.data.DataLoader(dataset_test, batch_size=batch_size, num_workers=num_workers)
 
-    model_dolg = DOLG().to(device)
+    model_dolg = DOLG(cfg).to(device)
     model_dolg = load_model(model_dolg, weight_path)
 
     landmark_id2idx = {landmark_id:idx for idx, landmark_id in enumerate(sorted(df['landmark_id'].unique()))}
@@ -381,16 +373,22 @@ def main():
     
 if __name__ == '__main__': 
     args = parse_args()
+
+    if args.config_name == None:
+        assert "Wrong config_file.....!"
+
+    cfg = init_config(args.config_name)
+
     device = torch.device('cuda')
-    batch_size = 16
-    num_workers = 2
-    out_dim = 17 
-    image_size=256
-    TOP_K = 5
-    CLS_TOP_K = 5
+    batch_size = cfg['inference']['batch_size']
+    num_workers = cfg['inference']['num_workers']
+    out_dim = cfg['inference']['out_dim'] 
+    image_size = cfg['inference']['image_size']
+    TOP_K = cfg['inference']['TOP_K']
+    CLS_TOP_K = cfg['inference']['CLS_TOP_K']
     
-    data_dir = '/content/drive/MyDrive/AIC_2022/Google_Landmark_Retrieval/top1/data/train/'
-    weight_path= '/content/drive/MyDrive/AIC_2022/Google_Landmark_Retrieval/top1/weights/b5ns_DDP_final_256_300w_f2_10ep_fold2.pth'
+    data_dir = './data/train/'
+    weight_path= cfg['inference']['weight_path']
     transforms = albumentations.Compose([
         albumentations.Resize(image_size, image_size),
         albumentations.Normalize()
