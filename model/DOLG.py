@@ -246,4 +246,3 @@ class DOLG(nn.Module):
             if name in freeze:
                 for param in child.parameters():
                     param.requires_grad = True
-

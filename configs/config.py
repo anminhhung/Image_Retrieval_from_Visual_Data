@@ -8,8 +8,6 @@ from configs.dolg.dolg_b7_step3 import cfg_b7_step3
 
 def init_config(config_path=None) -> ConfigParser:
 
-    # config = ConfigParser()
-    # config.read(config_path)
     config = None
     if "dolg_b5_step3" in config_path:
         config = cfg_b5
