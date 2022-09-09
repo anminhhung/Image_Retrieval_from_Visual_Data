@@ -25,7 +25,8 @@ cfg_b7_step1 = {
         "train_list_file_path":"train/train_list.txt",
         "model_dir":"saved",
         "CUDA_VISIBLE_DEVICES":'0',
-        "arcface_s":80,
+        "arcface_s":45,
+        "arcface_m":0.3,
         'local_rank': 0
       },
     'inference': {
