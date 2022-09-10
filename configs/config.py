@@ -5,6 +5,7 @@ from configs.dolg.dolg_b7_step2 import cfg_b7_step2
 from configs.dolg.dolg_b7_step3 import cfg_b7_step3
 from configs.swin.swin_224_b3 import cfg_swin_224_b3
 from configs.swin.swin_224_b5 import cfg_swin_224_b5
+from configs.swin.swin_384_b6 import cfg_swin_384_b6
 
 def init_config(config_path=None):
     config = None
@@ -22,5 +23,7 @@ def init_config(config_path=None):
         config = cfg_swin_224_b3
     elif "swin_224_b5" in config_path:
         config = cfg_swin_224_b5
+    elif "swin_384_b6" in config_path:
+        config = cfg_swin_384_b6
 
     return config

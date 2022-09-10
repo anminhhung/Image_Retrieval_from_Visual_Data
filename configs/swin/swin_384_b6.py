@@ -1,4 +1,4 @@
-cfg_swin_224_b3 = {
+cfg_swin_384_b6 = {
     'model': {
         "backbone":"swin_base_patch4_window12_384",
         "n_classes":17,

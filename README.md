@@ -27,7 +27,7 @@ python -u -m torch.distributed.launch --nproc_per_node=1 train_DOLG.py --config_
 
 **Train Swin Transformer**
 ```
-python -u -m torch.distributed.launch --nproc_per_node=1 train_swin.py --kernel-type b5ns_DDP_final_256_300w_f2_10ep --train-step 0 --data-dir data --image-size 224 --batch-size 8 --n-epochs 10 --fold 2  --CUDA_VISIBLE_DEVICES 0
+python -u -m torch.distributed.launch --nproc_per_node=1 train_swin.py --config_name swin_224_b5
 ```
 
 **Note**- If you want run with others kernel-type. Check github: https://github.com/haqishen/Google-Landmark-Recognition-2020-3rd-Place-Solution 
