@@ -99,77 +99,101 @@ class GeM(nn.Module):
         return self.__class__.__name__ + '(' + 'p=' + '{:.4f}'.format(self.p.data.tolist()[0]) + ', ' + 'eps=' + str(self.eps) + ')'
 
 class SwinTransformer(nn.Module):
-    def __init__(self):
+    def __init__(self, cfg):
         super(SwinTransformer, self).__init__()
-        self.n_classes = 17
-        backbone = "swin_base_patch4_window7_224"
-        neck = "option-D"
+        self.n_classes = cfg['model']['n_classes']
 
-        self.backbone = timm.create_model(backbone, 
-                                          pretrained=True, 
+        self.backbone = timm.create_model(cfg['model']['backbone'], 
+                                          pretrained=cfg['model']['pretrained'], 
                                           num_classes=0, 
                                         )
 
-        embedder = timm.create_model("tf_efficientnet_b3_ns", 
-                                      pretrained=True, 
-                                      features_only=True, out_indices=[1])
+        if cfg['model']['stride'] == None: # b3
+            if cfg['model']['backbone'] == "swin_base_patch4_window7_224":
+                embedder = timm.create_model(cfg['model']['embedder'], 
+                                            pretrained=cfg['model']['pretrained'], 
+                                            features_only=True, out_indices=[1])
+            elif cfg['model']['backbone'] == "swin_base_patch4_window12_384":
+                embedder = timm.create_model(cfg['model']['embedder'], 
+                                            pretrained=cfg['model']['pretrained'], 
+                                            features_only=True, out_indices=[3])
+            else:
+                assert "{} invalid embedder......!".format(cfg['model']['embedder'])
+        else: #b5
+            if cfg['model']['stride'] == (2, 2):
+                embedder = timm.create_model(cfg['model']['embedder'], 
+                                        pretrained=cfg['model']['pretrained'], 
+                                        features_only=True, out_indices=[2])
+            else:
+                embedder = timm.create_model(cfg['model']['embedder'], 
+                                        pretrained=cfg['model']['pretrained'], 
+                                        features_only=True, out_indices=[3])
+
+                embedder.conv_stem.stride = cfg['model']['stride']
 
         
-        self.backbone.patch_embed = HybridEmbed(embedder,img_size=896, 
+        self.backbone.patch_embed = HybridEmbed(embedder,img_size=cfg['model']['image_size'][0], 
                                               patch_size=1, 
                                               feature_size=self.backbone.patch_embed.grid_size, 
                                               in_chans=3, 
                                               embed_dim=self.backbone.embed_dim)
 
-        self.global_pool = GeM(p_trainable=True)
+        self.global_pool = GeM(p_trainable=cfg['model']['gem_p_trainable'])
 
-        if "xcit_small_24_p16" in backbone:
+        if "xcit_small_24_p16" in cfg['model']['backbone']:
             backbone_out = 384
-        elif "xcit_medium_24_p16" in backbone:
+        elif "xcit_medium_24_p16" in cfg['model']['backbone']:
             backbone_out = 512
-        elif "xcit_small_12_p16" in backbone:
+        elif "xcit_small_12_p16" in cfg['model']['backbone']:
             backbone_out = 384
-        elif "xcit_medium_12_p16" in backbone:
+        elif "xcit_medium_12_p16" in cfg['model']['backbone']:
             backbone_out = 512   
-        elif "swin" in backbone:
+        elif "swin" in cfg['model']['backbone']:
             backbone_out = self.backbone.num_features
-        elif "vit" in backbone:
+        elif "vit" in cfg['model']['backbone']:
             backbone_out = self.backbone.num_features
-        elif "cait" in backbone:
+        elif "cait" in cfg['model']['backbone']:
             backbone_out = self.backbone.num_features
         else:
             backbone_out = 2048 
 
-        self.embedding_size = 512
+        self.embedding_size = cfg['model']['embedding_size']
 
         # https://www.groundai.com/project/arcface-additive-angular-margin-loss-for-deep-face-recognition
-        if neck == "option-D":
+        if cfg['model']['neck'] == "option-D":
             self.neck = nn.Sequential(
                 nn.Linear(backbone_out, 512, bias=True),
                 nn.BatchNorm1d(512),
                 torch.nn.PReLU()
             )
-        elif neck == "option-F":
+        elif cfg['model']['neck'] == "option-F":
             self.neck = nn.Sequential(
                 nn.Dropout(0.3),
                 nn.Linear(backbone_out, 512, bias=True),
                 nn.BatchNorm1d(512),
                 torch.nn.PReLU()
             )
-        elif neck == "option-X":
+        elif cfg['model']['neck'] == "option-X":
             self.neck = nn.Sequential(
                 nn.Linear(backbone_out, 512, bias=False),
                 nn.BatchNorm1d(512),
             )
             
-        elif neck == "option-S":
+        elif cfg['model']['neck'] == "option-S":
             self.neck = nn.Sequential(
                 nn.Linear(backbone_out, 512),
                 Swish_module()
             )
 
-        self.head_in_units = 512
-        self.head = ArcMarginProduct_subcenter(512, 17)
+        self.head_in_units = cfg['model']['embedding_size']
+        self.head = ArcMarginProduct_subcenter(cfg['model']['embedding_size'], cfg['model']['n_classes'])
+
+        if cfg['model']['freeze_backbone_head']:
+            for name, param in self.named_parameters():
+                param.requires_grad = False
+                for l in cfg.unfreeze_layers: 
+                    if l in name:
+                        param.requires_grad = True
         
     def forward(self, x):
         x = self.backbone(x)

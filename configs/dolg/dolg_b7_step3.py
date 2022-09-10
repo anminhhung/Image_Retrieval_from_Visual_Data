@@ -3,7 +3,7 @@ cfg_b7_step3 = {
         "backbone":"tf_efficientnet_b7_ns",
         "n_classes":17,
         "pretrained":True,
-        "stride":1,
+        "stride":(1,1),
         "pool":"gem",
         "gem_p_trainable":True,
         "embedding_size":512,
@@ -13,7 +13,7 @@ cfg_b7_step3 = {
         "model_name":"efficientnet_b7_ns_step3",
         "data_dir":"data",
         "train_step":0,
-        "image_size":448, # 256
+        "image_size":256,
         "save_per_epoch":True,
         "batch_size":32,
         "num_workers":2,

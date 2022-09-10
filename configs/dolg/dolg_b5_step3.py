@@ -3,7 +3,7 @@ cfg_b5 = {
         'backbone': 'tf_efficientnet_b5_ns',
         'n_classes': 17, 
         'pretrained': True,
-        'stride': 2,
+        'stride': None,
         'pool': 'gem', # gem pool config
         'gem_p_trainable': True,
         'embedding_size': 512,
@@ -13,7 +13,7 @@ cfg_b5 = {
         'model_name': 'efficientnet_b5_ns_step3',
         'data_dir': 'data',
         'train_step': 0,
-        'image_size': 768, #256
+        'image_size': 256, 
         'save_per_epoch': True,
         'batch_size': 4,
         'num_workers': 2,
