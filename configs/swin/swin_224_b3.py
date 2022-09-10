@@ -15,11 +15,11 @@ cfg_swin_224_b3 = {
       },
     'train': {
         'model_name': 'swin_224_b3_efficientnet_b3_ns',
-        'data_dir': 'data',
+        'data_dir': '/content/drive/MyDrive/AIC_HCM/DOLG/DOLG-pytorch/dataset/data',
         'train_step': 0,
         'image_size': 224, 
         'save_per_epoch': True,
-        'batch_size': 4,
+        'batch_size': 32,
         'num_workers': 2,
         'init_lr': 0.00005, #1e-4
         'n_epochs': 2,
@@ -33,8 +33,8 @@ cfg_swin_224_b3 = {
         'local_rank': 0
       },
     'inference': {
-        'image_size': 768,
-        'batch_size': 4,
+        'image_size': 224,
+        'batch_size': 16,
         'num_workers': 2,
         'out_dim': 17,
         'TOP_K': 5,

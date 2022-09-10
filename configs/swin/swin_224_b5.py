@@ -4,7 +4,7 @@ cfg_swin_224_b5 = {
         "n_classes":17,
         "neck": "option-D", # type neck layer
         "pretrained":True,
-        "stride":(1,1), 
+        "stride":None, 
         "pool":"gem",
         "gem_p_trainable":True,
         "embedder": "tf_efficientnet_b5_ns",
@@ -15,11 +15,11 @@ cfg_swin_224_b5 = {
       },
     'train': {
         'model_name': 'swin_224_b3_efficientnet_b5_ns',
-        'data_dir': 'data',
+        'data_dir': '/content/drive/MyDrive/AIC_HCM/DOLG/DOLG-pytorch/dataset/data',
         'train_step': 0,
         'image_size': 224, 
         'save_per_epoch': True,
-        'batch_size': 4,
+        'batch_size': 32,
         'num_workers': 2,
         'init_lr': 0.00005, #1e-4
         'n_epochs': 2,
@@ -33,12 +33,13 @@ cfg_swin_224_b5 = {
         'local_rank': 0
       },
     'inference': {
-        'image_size': 768,
-        'batch_size': 4,
+        'image_size': 224,
+        'batch_size': 16,
         'num_workers': 2,
         'out_dim': 17,
         'TOP_K': 5,
         'CLS_TOP_K': 5,
-        'weight_path': './saved/dolg_efficientnet_b5_ns_step3_2.pth'
+        'weight_path': './saved/dolg_swin_224_b3_efficientnet_b5_ns_1.pth'
+        # 'weight_path': '/content/drive/MyDrive/AIC_HCM/DOLG/DOLG_GIT/saved/dolg_swin_224_b3_efficientnet_b5_ns_1.pth'
       }
     }  
