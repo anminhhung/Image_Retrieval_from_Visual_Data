@@ -7,6 +7,8 @@ import argparse
 import random
 import time
 import os
+import glob
+import re
 
 from torch.backends import cudnn
 from tqdm import tqdm as tqdm
@@ -17,6 +19,7 @@ from configs.config import init_config
 from model.DOLG import ArcFaceLossAdaptiveMargin,DOLG
 from utils.util import global_average_precision_score, GradualWarmupSchedulerV2
 from data_loader.dataset import LandmarkDataset, get_df, get_transforms
+from pathlib import Path
 
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
@@ -25,6 +28,9 @@ os.environ["OMP_NUM_THREADS"] = "1"
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config_name', type=str, required=True)
+    parser.add_argument('--trainCSVPath', type=str, required=True)
+    parser.add_argument('--checkpoint', nargs='?', const=True, default=False, help='resume most recent training')
+    parser.add_argument('--exist_ok', action='store_true', help='existing project/name ok, do not increment')
 
     args, _ = parser.parse_known_args()
     return args
@@ -48,12 +54,12 @@ def train_epoch(model, loader, optimizer, criterion):
         optimizer.zero_grad()
 
         if not cfg['train']['use_amp']:
-            logits_m = model(data)
+            _, logits_m = model(data)
             loss = criterion(logits_m, target)
             loss.backward()
             optimizer.step()
         else:
-            logits_m = model(data)
+            _,logits_m = model(data)
             loss = criterion(logits_m, target)
             with amp.scale_loss(loss, optimizer) as scaled_loss:
                 scaled_loss.backward()
@@ -113,7 +119,7 @@ def val_epoch(model, valid_loader, criterion, get_output=False):
 
 def train(cfg):
     # get dataframe
-    df, out_dim = get_df(cfg['train']['data_dir'], cfg['train']['train_list_file_path'])
+    df, out_dim = df, out_dim = get_df(trainCSVPath)
 
     # get adaptive margin
     tmp = np.sqrt(
@@ -143,21 +149,15 @@ def train(cfg):
     optimizer = optim.Adam(model.parameters(), lr=cfg['train']['init_lr'])
     if cfg['train']['use_amp']:
         model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
-
+    
     # load pretrained
-    if cfg['train']['load_pretrain'] != 'Not_load':
-        checkpoint = torch.load(
-            cfg['train']['load_pretrain'],  map_location='cuda:{}'.format(0))
+    if args.checkpoint:
+        print('-------Load Checkpoint-------')
+        checkpoint = torch.load(args.checkpoint,  map_location='cuda:{}'.format(cfg['train']['local_rank']))
         state_dict = checkpoint['model_state_dict']
         state_dict = {k[7:] if k.startswith(
             'module.') else k: state_dict[k] for k in state_dict.keys()}
-        if args.train_step == 1:
-            del state_dict['metric_classify.weight']
-            model.load_state_dict(state_dict, strict=False)
-        else:
-            model.load_state_dict(state_dict, strict=True)
-#             if 'optimizer_state_dict' in checkpoint:
-#                 optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        model.load_state_dict(state_dict, strict=True)
         del checkpoint, state_dict
         torch.cuda.empty_cache()
         import gc
@@ -192,12 +192,11 @@ def train(cfg):
             content = time.ctime() + ' ' + \
                 f'Epoch {epoch}, lr: {optimizer.param_groups[0]["lr"]:.7f}, train loss: {np.mean(train_loss):.5f}.'
             print(content)
-           
-
-            print('Saving model ...')
+                        
             model_path = os.path.join(cfg['train']['model_dir'], 
                             "dolg_{}_{}.pth".format(cfg['train']['model_name'], epoch))
-
+            
+            print(f'Saving model to {model_path}')
             torch.save({
                 'epoch': epoch,
                 'model_state_dict': model.state_dict(),
@@ -205,23 +204,24 @@ def train(cfg):
             }, model_path)
 
     if cfg['train']['save_per_epoch'] == False:
+        save_dir = increment_path(cfg['train']['model_dir'], exist_ok=args.exist_ok)  # increment run
         torch.save({
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
-        }, os.path.join(cfg['train']['model_dir'], 'dolg_{}.pth'.format(cfg['train']['model_name'])))
+        }, os.path.join(save_dir, 'dolg_{}.pth'.format(cfg['train']['model_name'])))
 
 
 if __name__ == '__main__':
     args = parse_args()
-    
+
     if args.config_name == None:
         assert "Wrong config_file.....!"
     
     cfg = init_config(args.config_name)
     os.makedirs(cfg['train']['model_dir'], exist_ok=True)
     os.environ['CUDA_VISIBLE_DEVICES'] = cfg['train']['CUDA_VISIBLE_DEVICES']
-
+    trainCSVPath = args.trainCSVPath
     set_seed(0)
 
     if cfg['train']['CUDA_VISIBLE_DEVICES'] != '-1':
