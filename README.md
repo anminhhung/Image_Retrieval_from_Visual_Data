@@ -27,7 +27,10 @@ python -u -m torch.distributed.launch --nproc_per_node=1 train_DOLG.py --config_
 
 **Train Swin Transformer**
 ```
-python -u -m torch.distributed.launch --nproc_per_node=1 train_swin.py --config_name swin_224_b5
+python -u -m torch.distributed.launch \
+          --nproc_per_node=1 train_swin.py \
+          --config_name swin_224_b5 \
+          --trainCSVPath ./dataset/data/train/train_list.txt 
 ```
 
 **Note**- If you want run with others kernel-type. Check github: https://github.com/haqishen/Google-Landmark-Recognition-2020-3rd-Place-Solution 
@@ -36,12 +39,20 @@ python -u -m torch.distributed.launch --nproc_per_node=1 train_swin.py --config_
 **Predict**
 
 ```
-!python predict.py --backbone tf_efficientnet_b5_ns
+python predict.py --backbone tf_efficientnet_b5_ns
 ```
 
-**Predict Swin Transformer with reranking method ("new","top3")**
+**Predict Swin Transformer with reranking method ("top1_3_2019","top3_2020")**
 ```
-!python predict_swin_reranking.py --config_name swin_224_b5 --reranking_method new
+python predict_swin.py \
+  --config_name swin_224_b5 \
+  --reranking_method top1_3_2019 \
+  --weight_path /content/drive/MyDrive/AIC_HCM/DOLG/DOLG_GIT/saved/dolg_swin_224_b3_efficientnet_b5_ns_1.pth \
+  --data_dir /content/drive/MyDrive/AIC_HCM/DOLG/DOLG-pytorch/dataset/data \
+  --trainCSVPath /content/drive/MyDrive/AIC_HCM/DOLG/DOLG-pytorch/dataset/data/train/train_list.txt \
+  --testCSVPath /content/drive/MyDrive/AIC_HCM/DOLG/DOLG-pytorch/dataset/data/train/test_list.txt \
+  --trainH5Path /content/drive/MyDrive/AIC_HCM/DOLG/DOLG-pytorch/dataset/data/train/train.h5 \
+  --indexH5Path /content/drive/MyDrive/AIC_HCM/DOLG/DOLG-pytorch/dataset/data/train/index.h5 
 ```
 
 ---
