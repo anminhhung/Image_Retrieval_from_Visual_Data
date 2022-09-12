@@ -26,6 +26,7 @@ os.environ["OMP_NUM_THREADS"] = "1"
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config_name', type=str, required=True)
+    parser.add_argument('--trainCSVPath', type=str, required=True)
 
     args, _ = parser.parse_known_args()
     return args
@@ -49,7 +50,7 @@ def train_epoch(model, loader, optimizer, criterion):
         data, target = data.cuda(), target.cuda()
         optimizer.zero_grad()
 
-        if not args.use_amp:
+        if not cfg['train']['use_amp']:
             logits_m = model(data)
             loss = criterion(logits_m, target)
             loss.backward()
@@ -115,7 +116,7 @@ def val_epoch(model, valid_loader, criterion, get_output=False):
 
 def train(cfg):
     # get dataframe
-    df, out_dim = df, out_dim = get_df(cfg['train']['data_dir'], cfg['train']['train_list_file_path'])
+    df, out_dim = df, out_dim = get_df(trainCSVPath)
 
     # get adaptive margin
     tmp = np.sqrt(
@@ -222,7 +223,7 @@ if __name__ == '__main__':
     cfg = init_config(args.config_name)
     os.makedirs(cfg['train']['model_dir'], exist_ok=True)
     os.environ['CUDA_VISIBLE_DEVICES'] = cfg['train']['CUDA_VISIBLE_DEVICES']
-
+    trainCSVPath = args.trainCSVPath
     set_seed(0)
 
     if cfg['train']['CUDA_VISIBLE_DEVICES'] != '-1':

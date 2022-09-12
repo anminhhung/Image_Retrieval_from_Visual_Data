@@ -55,9 +55,9 @@ def get_transforms(image_size):
     return transforms_train, transforms_val
 
 
-def get_df(data_dir, train_list_name='train/train_list.txt'):
-    df_train = pd.read_csv(os.path.join(data_dir.replace("$",""), train_list_name))
-    df_train['filepath'] = df_train['id'].apply(lambda x: os.path.join(data_dir, 'train',"_".join(x.split("_")[:-1]), f'{x}.jpg'))
+def get_df(trainCSVPath):
+    df_train = pd.read_csv(trainCSVPath)
+    df_train['filepath'] = df_train['id'].apply(lambda x: os.path.join('/'.join(trainCSVPath.split("/")[:-1]),"_".join(x.split("_")[:-1]), f'{x}.jpg'))
 
     landmark_id2idx = {landmark_id: idx for idx, landmark_id in enumerate(sorted(df_train['landmark_id'].unique()))}
     idx2landmark_id = {idx: landmark_id for idx, landmark_id in enumerate(sorted(df_train['landmark_id'].unique()))}
