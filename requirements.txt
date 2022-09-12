@@ -13,3 +13,4 @@ efficientnet-pytorch==0.7.0
 pytorch-lightning==1.6.4
 timm==0.6.7
 jpeg4py==0.1.4
+faiss-gpu==1.7.2

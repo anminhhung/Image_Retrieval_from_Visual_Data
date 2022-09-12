@@ -39,6 +39,11 @@ python -u -m torch.distributed.launch --nproc_per_node=1 train_swin.py --config_
 !python predict.py --backbone tf_efficientnet_b5_ns
 ```
 
+** Predict Swin Transformer with reranking method ("new","top3")**
+```
+!python predict_swin_reranking.py --config_name swin_224_b5 --reranking_method new
+```
+
 ---
 ## Folder Structure
 

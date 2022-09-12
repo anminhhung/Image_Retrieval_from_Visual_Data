@@ -99,8 +99,9 @@ class GeM(nn.Module):
         return self.__class__.__name__ + '(' + 'p=' + '{:.4f}'.format(self.p.data.tolist()[0]) + ', ' + 'eps=' + str(self.eps) + ')'
 
 class SwinTransformer(nn.Module):
-    def __init__(self, cfg):
+    def __init__(self, cfg, mode = "train"):
         super(SwinTransformer, self).__init__()
+        self.mode = mode
         self.n_classes = cfg['model']['n_classes']
 
         self.backbone = timm.create_model(cfg['model']['backbone'], 
@@ -200,5 +201,7 @@ class SwinTransformer(nn.Module):
         x_emb = self.neck(x)
         
         logits_m = self.head(x_emb)
-
-        return logits_m 
+        if self.mode == "train":
+          return logits_m 
+        else:
+          return x_emb, logits_m

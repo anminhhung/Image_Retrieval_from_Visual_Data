@@ -36,9 +36,13 @@ cfg_swin_224_b5 = {
         'image_size': 224,
         'batch_size': 16,
         'num_workers': 2,
+        'normalize': True,
         'out_dim': 17,
         'TOP_K': 5,
         'CLS_TOP_K': 5,
+        'test_dir':'/content/drive/MyDrive/AIC_HCM/DOLG/DOLG-pytorch/dataset/data',
+        'test_list_file_path': 'train/test_list.txt',
+		'index_list_file_path': 'train/index.h5',
         'weight_path': './saved/dolg_swin_224_b3_efficientnet_b5_ns_1.pth'
         # 'weight_path': '/content/drive/MyDrive/AIC_HCM/DOLG/DOLG_GIT/saved/dolg_swin_224_b3_efficientnet_b5_ns_1.pth'
       }

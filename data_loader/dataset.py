@@ -56,12 +56,6 @@ def get_transforms(image_size):
 
 
 def get_df(data_dir, train_list_name='train/train_list.txt'):
-    # if train_step == 0:
-    #     df_train = pd.read_csv(os.path.join(data_dir, train_list_name))
-    # else:
-    #     cls_81313 = df.landmark_id.unique()
-    #     df_train = pd.read_csv(os.path.join(data_dir, train_list_name)).drop(columns=['url']).set_index('landmark_id').loc[cls_81313].reset_index()
-        
     df_train = pd.read_csv(os.path.join(data_dir.replace("$",""), train_list_name))
     df_train['filepath'] = df_train['id'].apply(lambda x: os.path.join(data_dir, 'train',"_".join(x.split("_")[:-1]), f'{x}.jpg'))
 
