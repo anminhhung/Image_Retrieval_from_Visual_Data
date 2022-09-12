@@ -11,7 +11,6 @@ cfg_b7_step1 = {
       },
     "train":{
         "model_name":"efficientnet_b7_ns_step1",
-        "data_dir":"data",
         "train_step":0,
         "image_size":256,
         "save_per_epoch":True,
@@ -21,22 +20,18 @@ cfg_b7_step1 = {
         "n_epochs":2,
         "start_from_epoch":1,
         "use_amp":False,
-        "load_pretrain":"Not_load",
-        "train_list_file_path":"train/train_list.txt",
-        "model_dir":"saved",
+				"model_dir":"./run/saved",
         "CUDA_VISIBLE_DEVICES":'0',
         "arcface_s":45,
         "arcface_m":0.3,
         'local_rank': 0
       },
-    'inference': {
+    "inference": {
         "image_size": 256,
         "batch_size": 16,
         "num_workers": 2,
         "out_dim": 17,
         "TOP_K": 5,
         "CLS_TOP_K": 5,
-        "weight_path": './saved/dolg_efficientnet_b7_ns_step1_2.pth'
       }
 }
-

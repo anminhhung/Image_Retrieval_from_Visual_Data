@@ -3,7 +3,7 @@ cfg_b6 = {
 				"backbone":"tf_efficientnet_b6_ns",
 				"n_classes":17,
 				"pretrained":True,
-				"stride":None, # None
+				"stride":None,
 				"pool":"gem",
 				"gem_p_trainable":True,
 				"embedding_size":512,
@@ -11,32 +11,28 @@ cfg_b6 = {
       },
 		"train":{
 				"model_name":"efficientnet_b6_ns_step3",
-				"data_dir":"data",
 				"train_step":0,
 				"image_size":256, 
 				"save_per_epoch":True,
-				"batch_size":4,
+				"batch_size":16,
 				"num_workers":2,
-                "weight_decay":1e-4,
+        "weight_decay":1e-4,
 				"init_lr":0.0001,
 				"n_epochs":2,
 				"start_from_epoch":1,
 				"use_amp":False,
-				"load_pretrain":"Not_load",
-				"train_list_file_path":"train/train_list.txt",
-				"model_dir":"saved",
+				"model_dir":"./run/saved",
 				"CUDA_VISIBLE_DEVICES":"0",
 				"arcface_s":45,
-                "arcface_m":0.3,
-                'local_rank': 0
+        "arcface_m":0.3,
+        'local_rank': 0
       },
-        'inference': {
-                'image_size': 768, #256
-                'batch_size': 4,
-                'num_workers': 2,
-                'out_dim': 17,
-                'TOP_K': 5,
-                'CLS_TOP_K': 5,
-                'weight_path': './saved/dolg_efficientnet_b6_ns_step3_2.pth'
-       }
+    "inference": {
+        'image_size': 256,
+        'batch_size': 4,
+        'num_workers': 2,
+        'out_dim': 17,
+        'TOP_K': 5,
+        'CLS_TOP_K': 5,
+      }
 }
