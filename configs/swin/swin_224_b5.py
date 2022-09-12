@@ -15,7 +15,6 @@ cfg_swin_224_b5 = {
       },
     'train': {
         'model_name': 'swin_224_b3_efficientnet_b5_ns',
-        'data_dir': '/content/drive/MyDrive/AIC_HCM/DOLG/DOLG-pytorch/dataset/data',
         'train_step': 0,
         'image_size': 224, 
         'save_per_epoch': True,
@@ -26,7 +25,6 @@ cfg_swin_224_b5 = {
         'start_from_epoch': 1,
         'use_amp': False,
         'load_pretrain': 'Not_load',
-        'train_list_file_path': 'train/train_list.txt',
         'model_dir': 'saved', # save model
         'CUDA_VISIBLE_DEVICES': '0', # set device
         'arcface_s': 45, # arcface loss
@@ -40,10 +38,5 @@ cfg_swin_224_b5 = {
         'out_dim': 17,
         'TOP_K': 5,
         'CLS_TOP_K': 5,
-        'test_dir':'/content/drive/MyDrive/AIC_HCM/DOLG/DOLG-pytorch/dataset/data',
-        'test_list_file_path': 'train/test_list.txt',
-		'index_list_file_path': 'train/index.h5',
-        'weight_path': './saved/dolg_swin_224_b3_efficientnet_b5_ns_1.pth'
-        # 'weight_path': '/content/drive/MyDrive/AIC_HCM/DOLG/DOLG_GIT/saved/dolg_swin_224_b3_efficientnet_b5_ns_1.pth'
       }
     }  

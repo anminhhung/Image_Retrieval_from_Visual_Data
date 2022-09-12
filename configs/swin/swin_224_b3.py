@@ -15,7 +15,6 @@ cfg_swin_224_b3 = {
       },
     'train': {
         'model_name': 'swin_224_b3_efficientnet_b3_ns',
-        'data_dir': '/content/drive/MyDrive/AIC_HCM/DOLG/DOLG-pytorch/dataset/data',
         'train_step': 0,
         'image_size': 224, 
         'save_per_epoch': True,
@@ -39,6 +38,5 @@ cfg_swin_224_b3 = {
         'out_dim': 17,
         'TOP_K': 5,
         'CLS_TOP_K': 5,
-        'weight_path': './saved/dolg_efficientnet_b5_ns_step3_2.pth'
       }
     }  
