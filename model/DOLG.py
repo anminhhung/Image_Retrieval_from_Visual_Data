@@ -232,7 +232,7 @@ class DOLG(nn.Module):
        
         logits_m  = self.head(x_emb)
 
-        return logits_m
+        return x_emb, logits_m
 
     def freeze_weights(self, freeze=[]):
         for name, child in self.named_children():
