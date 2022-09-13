@@ -1,6 +1,6 @@
-cfg_swin_384_b6 = {
+cfg_swin_224_b6 = {
     'model': {
-        "backbone":"swin_base_patch4_window12_384",
+        "backbone":"swin_base_patch4_window7_224",
         "n_classes":17,
         "neck": "option-D", # type neck layer
         "pretrained":True,
@@ -10,7 +10,7 @@ cfg_swin_384_b6 = {
         "embedder": "tf_efficientnet_b6_ns",
         "embedding_size":512,
         "dilations":[3,6,9],
-        "image_size": (384,384), # size in HybridEmbed layer
+        "image_size": (224,224), # size in HybridEmbed layer
         "freeze_backbone_head": False
       },
     'train': {
