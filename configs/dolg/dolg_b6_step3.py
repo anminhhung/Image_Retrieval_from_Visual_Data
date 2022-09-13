@@ -27,6 +27,10 @@ cfg_b6 = {
         "arcface_m":0.3,
         'local_rank': 0
       },
+    "val": {
+        'batch_size': 2,
+        'num_workers': 5
+      },
     "inference": {
         'image_size': 256,
         'batch_size': 4,

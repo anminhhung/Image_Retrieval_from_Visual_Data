@@ -25,6 +25,10 @@ cfg_b5 = {
         'arcface_s': 45, # arcface loss
         'local_rank': 0
       },
+    "val": {
+        'batch_size': 2,
+        'num_workers': 5
+      },
     "inference": {
         'image_size': 256,
         'batch_size': 4,
