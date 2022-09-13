@@ -25,16 +25,18 @@ pip install -r requirements.txt
 python -u -m torch.distributed.launch --nproc_per_node=1 \
           train_DOLG.py \
           --config_name dolg_b5_step3 \
-          --trainCSVPath ./data/train/train_list.txt 
+          --trainCSVPath ./data/train/train_list.txt \
+          --valCSVPath ./data/train/test_train_list.txt
 ```
 
 **Load Trained Model and Continue Training**
 ```
-!python -u -m torch.distributed.launch --nproc_per_node=1 \
+python -u -m torch.distributed.launch --nproc_per_node=1 \
           train_DOLG.py \
           --config_name dolg_b5_step3 \
           --trainCSVPath ./data/train/train_list.txt \
-          --checkpoint './saved/dolg_efficientnet_b5_ns_step3_2.pth'
+          --valCSVPath ./data/train/test_train_list.txt \
+          --checkpoint './run/saved/dolg_efficientnet_b5_ns_step3_2.pth'
 ```
           
 **Train Swin Transformer**
@@ -52,10 +54,10 @@ python -u -m torch.distributed.launch \
 
 **Predict DOLG with reranking method ("top1_3_2019","top3_2020")**
 ```
-!python predict_DOLG.py \
-  --config_name dolg_b5_step3 \
+python predict_DOLG.py \
+  --config_name dolg_b7_step3 \
   --reranking_method top1_3_2019 \
-  --weight ./saved/dolg_efficientnet_b5_ns_step3_2.pth \
+  --weight ./run/saved/dolg_efficientnet_b7_ns_step3_2.pth \
   --data_dir ./data \
   --trainCSVPath ./data/train/train_list.txt \
   --testCSVPath ./data/train/test_list.txt \
