@@ -15,6 +15,8 @@ cfg_b7_step3 = {
         "image_size":256,
         "save_per_epoch":True,
         "batch_size":8,
+        'image_per_batch': 64,
+        'num_instance': 16,
         "num_workers":2,
         "init_lr":0.00005, #0.0001
         "n_epochs":2,

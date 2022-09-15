@@ -17,6 +17,7 @@ from configs.config import init_config
 from model.hybrid_swin_transformer import ArcFaceLossAdaptiveMargin, SwinTransformer
 from utils.util import global_average_precision_score, GradualWarmupSchedulerV2
 from data_loader.dataset import LandmarkDataset, get_df, get_transforms
+from data_loader.make_dataloader import make_dataloader
 
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
@@ -114,20 +115,14 @@ def val_epoch(model, valid_loader, criterion, get_output=False):
         return val_loss, acc_m, gap_m
 
 
-def train(cfg):
+def train(cfg, args):
     # get dataframe
-    df, out_dim = df, out_dim = get_df(trainCSVPath)
+    df, out_dim = df, out_dim = get_df(args.trainCSVPath)
 
     # get adaptive margin
     tmp = np.sqrt(
         1 / np.sqrt(df['landmark_id'].value_counts().sort_index().values))
     margins = (tmp - tmp.min()) / (tmp.max() - tmp.min()) * 0.45 + 0.05
-
-    # get augmentations (Resize and Normalize)
-    transforms_train, transforms_val = get_transforms(cfg['train']['image_size'])
-
-    dataset_train = LandmarkDataset(
-        df, 'train', 'train', transform=transforms_train)
 
     # swin model
     model = SwinTransformer(cfg)
@@ -180,12 +175,7 @@ def train(cfg):
         print(time.ctime(), 'Epoch:', epoch)
         scheduler_warmup.step(epoch - 1)
 
-        train_sampler = torch.utils.data.distributed.DistributedSampler(
-            dataset_train)
-        train_sampler.set_epoch(epoch)
-
-        train_loader = torch.utils.data.DataLoader(dataset_train, batch_size=cfg['train']['batch_size'], num_workers=cfg['train']['num_workers'],
-                                                   shuffle=train_sampler is None, sampler=train_sampler, drop_last=True)
+        train_loader = make_dataloader(cfg, args)
 
         train_loss = train_epoch(model, train_loader, optimizer, criterion)
         # val_loss, acc_m, gap_m = val_epoch(model, valid_loader, criterion)
@@ -223,7 +213,6 @@ if __name__ == '__main__':
     cfg = init_config(args.config_name)
     os.makedirs(cfg['train']['model_dir'], exist_ok=True)
     os.environ['CUDA_VISIBLE_DEVICES'] = cfg['train']['CUDA_VISIBLE_DEVICES']
-    trainCSVPath = args.trainCSVPath
     set_seed(0)
 
     if cfg['train']['CUDA_VISIBLE_DEVICES'] != '-1':
@@ -233,4 +222,5 @@ if __name__ == '__main__':
             backend='nccl', init_method='env://')
         cudnn.benchmark = True
 
-    train(cfg)
+    train(cfg, args)
+

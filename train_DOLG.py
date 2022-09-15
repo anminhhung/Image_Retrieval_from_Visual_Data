@@ -20,6 +20,7 @@ from model.DOLG import ArcFaceLossAdaptiveMargin,DOLG
 from utils.util import global_average_precision_score, GradualWarmupSchedulerV2
 from data_loader.dataset import LandmarkDataset, get_df, get_transforms
 from pathlib import Path
+from data_loader.make_dataloader import make_dataloader
 
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"

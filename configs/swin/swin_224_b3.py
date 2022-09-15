@@ -19,6 +19,8 @@ cfg_swin_224_b3 = {
         'image_size': 224, 
         'save_per_epoch': True,
         'batch_size': 32,
+        'image_per_batch': 64,
+        'num_instance': 16,
         'num_workers': 2,
         'init_lr': 0.00005, #1e-4
         'n_epochs': 2,
@@ -29,7 +31,7 @@ cfg_swin_224_b3 = {
         'model_dir': 'saved', # save model
         'CUDA_VISIBLE_DEVICES': '0', # set device
         'arcface_s': 45, # arcface loss
-        'local_rank': 0
+        'local_rank': 0,
       },
     'inference': {
         'image_size': 224,

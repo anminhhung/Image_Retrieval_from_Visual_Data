@@ -1,6 +1,16 @@
 <h1>HCM AI CHALLENGE 2022 - Event Retrieval from Visual Data</h1>
 
 ---
+## To do task 
+- [x] DOLG
+- [x] Hybrid swin transformer
+- [x] Reranking top 3 2019
+- [x] Reranking top 3 2020
+- [x] ID uniform sampling
+- [x] Softmax uniform sampling 
+- [ ] continent-aware
+
+---
 
 ## Requirements
 
