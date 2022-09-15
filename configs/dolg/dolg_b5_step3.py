@@ -9,12 +9,17 @@ cfg_b5 = {
         'embedding_size': 512,
         'dilations': [6,12,18]
       },
+    "dataloader":{
+        'num_instance': 16,
+        'sampler': 'softmax',
+      },
     "train": {
         'model_name': 'efficientnet_b5_ns_step3',
         'train_step': 0,
         'image_size': 256, 
         'save_per_epoch': True,
-        'batch_size': 32,
+        'batch_size': 8,
+        'num_instance': 16,
         'num_workers': 5,
         'init_lr': 0.00005, #1e-4
         'n_epochs': 2,

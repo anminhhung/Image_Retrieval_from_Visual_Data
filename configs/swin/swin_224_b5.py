@@ -13,6 +13,10 @@ cfg_swin_224_b5 = {
         "image_size": (448,448), # size in HybridEmbed layer
         "freeze_backbone_head": False
       },
+    "dataloader":{
+        'num_instance': 16,
+        'sampler': 'softmax',
+      },
     'train': {
         'model_name': 'swin_224_b3_efficientnet_b5_ns',
         'train_step': 0,

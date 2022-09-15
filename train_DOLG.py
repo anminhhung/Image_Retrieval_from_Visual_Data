@@ -19,11 +19,14 @@ from configs.config import init_config
 from model.DOLG import ArcFaceLossAdaptiveMargin,DOLG
 from utils.util import global_average_precision_score, GradualWarmupSchedulerV2
 from data_loader.dataset import LandmarkDataset, get_df, get_transforms
+from data_loader.make_dataloader import make_dataloader
 from pathlib import Path
 
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
+
+os.environ["PL_TORCH_DISTRIBUTED_BACKEND"] = "gloo"
 
 def increment_path(path, exist_ok=True, sep=''):
     path = Path(path)  # os-agnostic
@@ -132,7 +135,8 @@ def train(cfg):
     
     dataset_train = LandmarkDataset(df_train, 'train', 'train', transform=transforms_train)
     dataset_valid = LandmarkDataset(df_val, 'train', 'train', transform=transforms_val)
-    valid_loader = torch.utils.data.DataLoader(dataset_valid, batch_size=cfg['val']['batch_size'], num_workers=cfg['val']['num_workers'])
+
+    train_loader, valid_loader = make_dataloader(cfg, dataset_train, dataset_valid)
 
     # get adaptive margin
     tmp = np.sqrt(
@@ -184,11 +188,13 @@ def train(cfg):
         print(time.ctime(), 'Epoch:', epoch)
         scheduler_warmup.step(epoch - 1)
 
-        train_sampler = torch.utils.data.distributed.DistributedSampler(
-            dataset_train)
-        train_sampler.set_epoch(epoch)      
-        train_loader = torch.utils.data.DataLoader(dataset_train, batch_size=cfg['train']['batch_size'], num_workers=cfg['train']['num_workers'],
-                                                   shuffle=train_sampler is None, sampler=train_sampler, drop_last=True)
+        if cfg["dataloader"]["sampler"] == 'softmax':
+            train_loader.sampler.set_epoch(epoch)
+        # train_sampler = torch.utils.data.distributed.DistributedSampler(
+        #     dataset_train)
+        # train_sampler.set_epoch(epoch)      
+        # train_loader = torch.utils.data.DataLoader(dataset_train, batch_size=cfg['train']['batch_size'], num_workers=cfg['train']['num_workers'],
+        #                                            shuffle=train_sampler is None, sampler=train_sampler, drop_last=True)
         
         train_loss = train_epoch(model, train_loader, optimizer, criterion)
         val_loss, acc_m, gap_m = val_epoch(model, valid_loader, criterion)
@@ -231,8 +237,10 @@ if __name__ == '__main__':
     if cfg['train']['CUDA_VISIBLE_DEVICES'] != '-1':
         torch.backends.cudnn.benchmark = True
         torch.cuda.set_device(cfg['train']['local_rank'])
+        # torch.distributed.init_process_group(
+        #     backend='nccl', init_method='env://')
         torch.distributed.init_process_group(
-            backend='nccl', init_method='env://')
+            backend='gloo', init_method='env://')
         cudnn.benchmark = True
 
     train(cfg)

@@ -17,6 +17,7 @@ from configs.config import init_config
 from model.hybrid_swin_transformer import ArcFaceLossAdaptiveMargin, SwinTransformer
 from utils.util import global_average_precision_score, GradualWarmupSchedulerV2
 from data_loader.dataset import LandmarkDataset, get_df, get_transforms
+from data_loader.make_dataloader import make_dataloader
 
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
@@ -115,23 +116,24 @@ def val_epoch(model, valid_loader, criterion, get_output=False):
 
 
 def train(cfg):
+    # get augmentations (Resize and Normalize)
+    transforms_train, transforms_val = get_transforms(cfg['train']['image_size'])
     # get dataframe
-    df, out_dim = df, out_dim = get_df(trainCSVPath)
+    df_train, out_dim = get_df(trainCSVPath)
+    df_val, _ = get_df(valCSVPath)
+
+    dataset_train = LandmarkDataset(df_train, 'train', 'train', transform=transforms_train)
+    dataset_valid = LandmarkDataset(df_val, 'train', 'train', transform=transforms_val)
+
+    train_loader, valid_loader = make_dataloader(cfg, dataset_train, dataset_valid)
 
     # get adaptive margin
     tmp = np.sqrt(
-        1 / np.sqrt(df['landmark_id'].value_counts().sort_index().values))
+        1 / np.sqrt(df_train['landmark_id'].value_counts().sort_index().values))
     margins = (tmp - tmp.min()) / (tmp.max() - tmp.min()) * 0.45 + 0.05
-
-    # get augmentations (Resize and Normalize)
-    transforms_train, transforms_val = get_transforms(cfg['train']['image_size'])
-
-    dataset_train = LandmarkDataset(
-        df, 'train', 'train', transform=transforms_train)
 
     # swin model
     model = SwinTransformer(cfg)
-
     model = model.cuda()
     model = apex.parallel.convert_syncbn_model(model)
 
@@ -176,16 +178,17 @@ def train(cfg):
     # train & valid loop
     gap_m_max = 0
     for epoch in range(cfg['train']['start_from_epoch'], cfg['train']['n_epochs']+1):
-
         print(time.ctime(), 'Epoch:', epoch)
         scheduler_warmup.step(epoch - 1)
 
-        train_sampler = torch.utils.data.distributed.DistributedSampler(
-            dataset_train)
-        train_sampler.set_epoch(epoch)
+        if cfg["dataloader"]["sampler"] == 'softmax':
+            train_loader.sampler.set_epoch(epoch)
+        # train_sampler = torch.utils.data.distributed.DistributedSampler(
+        #     dataset_train)
+        # train_sampler.set_epoch(epoch)
 
-        train_loader = torch.utils.data.DataLoader(dataset_train, batch_size=cfg['train']['batch_size'], num_workers=cfg['train']['num_workers'],
-                                                   shuffle=train_sampler is None, sampler=train_sampler, drop_last=True)
+        # train_loader = torch.utils.data.DataLoader(dataset_train, batch_size=cfg['train']['batch_size'], num_workers=cfg['train']['num_workers'],
+        #                                            shuffle=train_sampler is None, sampler=train_sampler, drop_last=True)
 
         train_loss = train_epoch(model, train_loader, optimizer, criterion)
         # val_loss, acc_m, gap_m = val_epoch(model, valid_loader, criterion)
@@ -229,8 +232,10 @@ if __name__ == '__main__':
     if cfg['train']['CUDA_VISIBLE_DEVICES'] != '-1':
         torch.backends.cudnn.benchmark = True
         torch.cuda.set_device(cfg['train']['local_rank'])
+        # torch.distributed.init_process_group(
+        #     backend='nccl', init_method='env://')
         torch.distributed.init_process_group(
-            backend='nccl', init_method='env://')
+            backend='gloo', init_method='env://')
         cudnn.benchmark = True
 
     train(cfg)
