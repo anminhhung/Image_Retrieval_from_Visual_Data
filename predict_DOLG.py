@@ -68,8 +68,6 @@ def prepare_ids_and_feats(path, weights=None, normalize=True):
         weights = [1.0]
     ids, feats = load_scattered_h5data(path)
     feats = l2norm_numpy(feats) * weights
-    if normalize:
-        feats = l2norm_numpy(feats)
 
     return ids, feats.astype(np.float32)
 

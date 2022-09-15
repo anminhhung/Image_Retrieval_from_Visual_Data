@@ -23,7 +23,7 @@ def init_config(config_path=None):
         config = cfg_swin_224_b3
     elif "swin_224_b5" in config_path:
         config = cfg_swin_224_b5
-    elif "swin_384_b6" in config_path:
+    elif "swin_224_b6" in config_path:
         config = cfg_swin_224_b6
 
     return config

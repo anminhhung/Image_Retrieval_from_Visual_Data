@@ -26,12 +26,19 @@ cfg_swin_224_b3 = {
         'n_epochs': 2,
         'start_from_epoch': 1,
         'use_amp': False,
-        'load_pretrain': 'Not_load',
-        'train_list_file_path': 'train/train_list.txt',
-        'model_dir': 'saved', # save model
+        'model_dir': './run/saved', # save model
         'CUDA_VISIBLE_DEVICES': '0', # set device
         'arcface_s': 45, # arcface loss
         'local_rank': 0,
+        'sampler': 'id_uniform'
+      },
+    "val": {
+        'batch_size': 2,
+        'num_workers': 5,
+        'image_size': 224,
+        'num_instance': 16,
+        'image_per_batch': 32,
+        'sampler': 'id_uniform'
       },
     'inference': {
         'image_size': 224,

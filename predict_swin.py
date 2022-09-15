@@ -77,15 +77,11 @@ def load_scattered_h5data(file_path):
     return ids, feats
 
 def prepare_ids_and_feats(path, weights=None, normalize=True):
-
     if weights is None:
         weights = [1.0]
         
     ids, feats = load_scattered_h5data(path)
     feats = l2norm_numpy(feats) * weights
-    
-    if normalize:
-        feats = l2norm_numpy(feats)
 
     return ids, feats.astype(np.float32)
 
@@ -94,7 +90,7 @@ def l2norm_numpy(x):
 
 def main(use_reranking_method = "new"):
   # swin model
-  model = SwinTransformer(cfg, mode = "test")
+  model = SwinTransformer(cfg)
   model = model.cuda()
   model = load_model(model, weight_path)
 
@@ -179,7 +175,6 @@ if __name__ == '__main__':
     batch_size = cfg['inference']['batch_size']
     num_workers = cfg['inference']['num_workers']
     out_dim = cfg['inference']['out_dim'] 
-    normalize = cfg['inference']['normalize']
     image_size = cfg['inference']['image_size']
     TOP_K = cfg['inference']['TOP_K']
     CLS_TOP_K = cfg['inference']['CLS_TOP_K']
