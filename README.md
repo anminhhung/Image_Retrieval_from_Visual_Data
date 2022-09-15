@@ -67,7 +67,7 @@ python -u -m torch.distributed.launch \
 python predict_DOLG.py \
   --config_name dolg_b7_step3 \
   --reranking_method top1_3_2019 \
-  --weight ./run/saved/dolg_efficientnet_b7_ns_step3_2.pth \
+  --weight_path ./run/saved/dolg_efficientnet_b7_ns_step3_2.pth \
   --data_dir ./data \
   --trainCSVPath ./data/train/train_list.txt \
   --testCSVPath ./data/train/test_list.txt \

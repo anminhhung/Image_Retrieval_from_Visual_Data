@@ -27,11 +27,16 @@ cfg_b6 = {
 			"CUDA_VISIBLE_DEVICES":"0",
 			"arcface_s":45,
 			"arcface_m":0.3,
-			'local_rank': 0
+			'local_rank': 0,
+      'sampler': 'id_uniform'
       },
     "val": {
-			'batch_size': 2,
-			'num_workers': 5
+        'batch_size': 2,
+        'num_workers': 5,
+        'image_size': 256,
+        'num_instance': 16,
+        'image_per_batch': 32,
+        'sampler': 'id_uniform'
       },
     "inference": {
 			'image_size': 256,
