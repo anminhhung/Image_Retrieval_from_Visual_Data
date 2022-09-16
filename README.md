@@ -8,8 +8,9 @@
 - [x] Reranking top 3 2020
 - [x] ID uniform sampling
 - [x] Softmax uniform sampling 
-- [ ] continent-aware
-
+- [ ] Continent-aware
+- [ ] Mish activation 
+- [ ] Gradient Clipping 
 ---
 
 ## Requirements
