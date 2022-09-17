@@ -26,7 +26,7 @@ cfg_swin_224_b5 = {
         'n_epochs': 2,
         'start_from_epoch': 1,
         'use_amp': False,
-        'model_dir': './run/saved', # save model
+        'model_dir': './saved', # save model
         'CUDA_VISIBLE_DEVICES': '0', # set device
         'arcface_s': 45, # arcface loss
         'local_rank': 0,
