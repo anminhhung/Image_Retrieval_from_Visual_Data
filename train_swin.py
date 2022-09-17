@@ -44,6 +44,7 @@ def parse_args():
     parser.add_argument('--valCSVPath', type=str, required=True)
     parser.add_argument('--checkpoint', nargs='?', const=True, default=False, help='resume most recent training')
     parser.add_argument('--exist_ok', action='store_true', help='existing project/name ok, do not increment')
+    parser.add_argument('--use_wandb', action='store_true')
 
     args, _ = parser.parse_known_args()
     return args
@@ -80,7 +81,7 @@ def train_epoch(model, loader, optimizer, criterion):
         smooth_loss = sum(train_loss[-100:]) / min(len(train_loss), 100)
         bar.set_description('loss: %.5f, smth: %.5f' % (loss_np, smooth_loss))
 
-    return train_loss
+    return np.mean(train_loss)
 
 def val_epoch(model, valid_loader, criterion, get_output=False):
     model.eval()
@@ -163,6 +164,7 @@ def train(cfg, args):
         torch.cuda.empty_cache()
         import gc
         gc.collect()
+        print("DONE")
 
     model = DistributedDataParallel(model, delay_allreduce=True)
 
@@ -176,26 +178,34 @@ def train(cfg, args):
     gap_m_max = 0
     model_path = increment_path(Path(cfg['train']['model_dir']), exist_ok=args.exist_ok)
     os.makedirs(model_path, exist_ok=True)
+
+    if args.use_wandb:
+        wandb.init(project="Image Retrieval")
+        wandb.watch(model, log_freq=100)
+
     for epoch in range(cfg['train']['start_from_epoch'], cfg['train']['n_epochs']+1):
         print(time.ctime(), 'Epoch:', epoch)
         scheduler_warmup.step(epoch - 1)
 
         train_loss = train_epoch(model, train_loader, optimizer, criterion)
         val_loss, acc_m, gap_m = val_epoch(model, valid_loader, criterion)
-
-        if cfg['train']['save_per_epoch']:
-              content = time.ctime() + ' ' + \
-                  f'Epoch {epoch}, lr: {optimizer.param_groups[0]["lr"]:.7f}, \
-                  train loss: {np.mean(train_loss):.5f}, valid loss: {(val_loss):.5f}, acc_m: {(acc_m):.6f}, gap_m: {(gap_m):.6f}.'
-              print(content)
-
-              save_dir = os.path.join(model_path, 
-                              "dolg_{}_{}.pth".format(cfg['train']['model_name'], epoch))
+        content = time.ctime() + ' ' + \
+            f'Epoch {epoch}, lr: {optimizer.param_groups[0]["lr"]:.7f}, train loss: {train_loss:.5f}, valid loss: {(val_loss):.5f}, acc_m: {(acc_m):.6f}, gap_m: {(gap_m):.6f}.'
+        print(content)
+        if args.use_wandb:
+            wandb.log({'loss_train':train_loss,
+                        'loss_val':val_loss,
+                        'accuracy': acc_m,
+                        'gap': gap_m})
+        if  epoch % cfg['train']['save_per_epoch'] == 0:
+              save_dir = increment_path(model_path, exist_ok=args.exist_ok)  # increment run
+              save_dir = os.path.join(save_dir, 'swin_{}.pth'.format(cfg['train']['model_name']))
               print('gap_m_max ({:.6f} --> {:.6f}). Saving model to {}'.format(gap_m_max, gap_m, save_dir))
               torch.save({
                   'epoch': epoch,
                   'model_state_dict': model.state_dict(),
                   'optimizer_state_dict': optimizer.state_dict(),
+                  'loss': train_loss
               }, save_dir)
               gap_m_max = gap_m
 
@@ -205,6 +215,7 @@ def train(cfg, args):
             'epoch': epoch,
             'model_state_dict': model.state_dict(),
             'optimizer_state_dict': optimizer.state_dict(),
+            'loss': train_loss
         }, os.path.join(save_dir, 'swin_{}.pth'.format(cfg['train']['model_name'])))
 
 
@@ -223,5 +234,8 @@ if __name__ == '__main__':
         torch.distributed.init_process_group(
             backend='nccl', init_method='env://')
         cudnn.benchmark = True
-
+    if args.use_wandb:
+        import wandb
+        # print("-"*10,"LOGIN WANDB WITH API KEY","-"*10)
+        os.system("wandb login")
     train(cfg, args)
