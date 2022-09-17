@@ -49,6 +49,13 @@ python -u -m torch.distributed.launch --nproc_per_node=1 \
           --valCSVPath ./data/train/test_train_list.txt \
           --checkpoint './run/saved/dolg_efficientnet_b5_ns_step3_2.pth'
 ```
+
+**[Optional]**
+```
+!pip install wandb -qqq
+import wandb
+wandb.login()
+```
           
 **Train Swin Transformer**
 ```

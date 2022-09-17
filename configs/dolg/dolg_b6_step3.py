@@ -45,5 +45,8 @@ cfg_b6 = {
 			'out_dim': 17,
 			'TOP_K': 5,
 			'CLS_TOP_K': 5,
+      },
+    "wandb": {
+        'project': 'dolg_b6_step3'
       }
 }

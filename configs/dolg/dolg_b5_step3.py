@@ -1,7 +1,7 @@
 cfg_b5 = {
     "model": {
         'backbone': 'tf_efficientnet_b5_ns',
-        'n_classes': 17, 
+        'n_classes': 127, 
         'pretrained': True,
         'stride': None,
         'pool': 'gem', # gem pool config
@@ -17,9 +17,9 @@ cfg_b5 = {
         'batch_size': 32,
         'image_per_batch': 64,
         'num_instance': 16,
-        'num_workers': 5,
+        'num_workers': 2,
         'init_lr': 0.00005, #1e-4
-        'n_epochs': 2,
+        'n_epochs': 100,
         'start_from_epoch': 1,
         'use_amp': False,
         'model_dir': './run/saved', # save model
@@ -30,7 +30,7 @@ cfg_b5 = {
       },
     "val": {
         'batch_size': 2,
-        'num_workers': 5,
+        'num_workers': 2,
         'image_size': 256,
         'num_instance': 16,
         'image_per_batch': 32,
@@ -43,5 +43,8 @@ cfg_b5 = {
         'out_dim': 17,
         'TOP_K': 5,
         'CLS_TOP_K': 5,
+      },
+    "wandb": {
+        'project': 'dolg_b5_step3'
       }
     }  

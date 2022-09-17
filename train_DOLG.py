@@ -22,6 +22,8 @@ from data_loader.dataset import LandmarkDataset, get_df, get_transforms
 from pathlib import Path
 from data_loader.make_dataloader import make_dataloader
 
+import wandb
+
 os.environ["MKL_NUM_THREADS"] = "1"
 os.environ["NUMEXPR_NUM_THREADS"] = "1"
 os.environ["OMP_NUM_THREADS"] = "1"
@@ -77,8 +79,10 @@ def train_epoch(model, loader, optimizer, criterion):
         torch.cuda.synchronize()
         loss_np = loss.detach().cpu().numpy()
         train_loss.append(loss_np)
+
         smooth_loss = sum(train_loss[-100:]) / min(len(train_loss), 100)
         bar.set_description('loss: %.5f, smth: %.5f' % (loss_np, smooth_loss))
+    train_loss = np.mean(train_loss)
 
     return train_loss
 
@@ -121,6 +125,7 @@ def val_epoch(model, valid_loader, criterion, get_output=False):
         y_pred_m = {idx: (pred_cls, conf) for idx, (pred_cls,
                                                     conf) in enumerate(zip(PREDS_M, PRODS_M))}
         gap_m = global_average_precision_score(y_true, y_pred_m)
+
         return val_loss, acc_m, gap_m
 
 def train(cfg, args):
@@ -155,10 +160,12 @@ def train(cfg, args):
     if args.checkpoint:
         print('-------Load Checkpoint-------')
         checkpoint = torch.load(args.checkpoint,  map_location='cuda:{}'.format(cfg['train']['local_rank']))
+        cfg['train']['start_from_epoch'] = checkpoint['epoch'] + 1
         state_dict = checkpoint['model_state_dict']
         state_dict = {k[7:] if k.startswith(
             'module.') else k: state_dict[k] for k in state_dict.keys()}
         model.load_state_dict(state_dict, strict=True)
+        args.exist_ok = True
         del checkpoint, state_dict
         torch.cuda.empty_cache()
         import gc
@@ -182,13 +189,17 @@ def train(cfg, args):
         
         train_loss = train_epoch(model, train_loader, optimizer, criterion)
         val_loss, acc_m, gap_m = val_epoch(model, valid_loader, criterion)
-          
-        if cfg['train']['save_per_epoch']:
-            content = time.ctime() + ' ' + \
-                f'Epoch {epoch}, lr: {optimizer.param_groups[0]["lr"]:.7f}, \
-                train loss: {np.mean(train_loss):.5f}, valid loss: {(val_loss):.5f}, acc_m: {(acc_m):.6f}, gap_m: {(gap_m):.6f}.'
-            print(content)
 
+        content = time.ctime() + ' ' + \
+                f'Epoch {epoch}, lr: {optimizer.param_groups[0]["lr"]:.7f}, \
+                train loss: {(train_loss):.5f}, valid loss: {(val_loss):.5f}, acc_m: {(acc_m):.6f}, gap_m: {(gap_m):.6f}.'
+        print(content)
+
+        if "wandb" in cfg:
+            wandb.log({'train_loss': train_loss, 'val_loss': val_loss, 'acc_m': acc_m, 'gap_m': gap_m})
+            wandb.watch(model)
+  
+        if epoch % cfg['train']['save_per_epoch'] == 0:
             save_dir = os.path.join(model_path, 
                             "dolg_{}_{}.pth".format(cfg['train']['model_name'], epoch))
             print('gap_m_max ({:.6f} --> {:.6f}). Saving model to {}'.format(gap_m_max, gap_m, save_dir))
@@ -215,6 +226,9 @@ if __name__ == '__main__':
     cfg = init_config(args.config_name)
     os.environ['CUDA_VISIBLE_DEVICES'] = cfg['train']['CUDA_VISIBLE_DEVICES']
     set_seed(0)
+
+    if "wandb" in cfg:
+        wandb.init(project=cfg['wandb']['project'])
     
     if cfg['train']['CUDA_VISIBLE_DEVICES'] != '-1':
         torch.backends.cudnn.benchmark = True
