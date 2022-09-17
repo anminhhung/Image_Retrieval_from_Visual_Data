@@ -55,15 +55,17 @@ python -u -m torch.distributed.launch --nproc_per_node=1 \
 python -u -m torch.distributed.launch \
           --nproc_per_node=1 train_swin.py \
           --config_name swin_224_b5 \
-          --trainCSVPath ./dataset/data/train/train_list.txt 
+          --trainCSVPath ./dataset/data/train/train_list.txt \
+          --use_wandb True
 ```
+**Note**- Add --use_wandb to use wandb to visuallize while training. If --use_wandb is True, you have to enter your API key to login. Check https://wandb.ai/authorize to get API key.
 
-**Note**- If you want run with others kernel-type. Check github: https://github.com/haqishen/Google-Landmark-Recognition-2020-3rd-Place-Solution 
+**Note**- Source: https://github.com/haqishen/Google-Landmark-Recognition-2020-3rd-Place-Solution 
 
 
 **Predict**
 
-**Predict DOLG with reranking method ("top1_3_2019","top3_2020")**
+**Predict DOLG with reranking method ("top1_3_2019","top3_2020","top1_shopee")**
 ```
 python predict_DOLG.py \
   --config_name dolg_b7_step3 \
@@ -76,7 +78,7 @@ python predict_DOLG.py \
   --indexH5Path ./data/train/index.h5 
 ```
 
-**Predict Swin Transformer with reranking method ("top1_3_2019","top3_2020")**
+**Predict Swin Transformer with reranking method ("top1_3_2019","top3_2020","top1_shopee")**
 ```
 python predict_swin.py \
   --config_name swin_224_b5 \
