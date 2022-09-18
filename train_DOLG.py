@@ -173,6 +173,7 @@ def train(cfg, args):
         torch.cuda.empty_cache()
         import gc
         gc.collect()
+        print('-------DONE-------')
 
     model = DistributedDataParallel(model, delay_allreduce=True)
 
@@ -225,10 +226,6 @@ def train(cfg, args):
             torch.save(ckpt, save_dir)
             gap_m_max = gap_m
       
-    if cfg['train']['save_per_epoch'] == False:
-        save_dir = os.path.join(model_path, 
-                            "dolg_{}.pth".format(cfg['train']['model_name']))
-        torch.save(ckpt, save_dir)
 
 if __name__ == '__main__':
     args = parse_args()

@@ -17,7 +17,7 @@ cfg_swin_224_b3 = {
         'model_name': 'swin_224_b3_efficientnet_b3_ns',
         'train_step': 0,
         'image_size': 224, 
-        'save_per_epoch': True,
+        'save_per_epoch': 1,
         'batch_size': 32,
         'image_per_batch': 64,
         'num_instance': 16,
@@ -47,5 +47,8 @@ cfg_swin_224_b3 = {
         'out_dim': 17,
         'TOP_K': 5,
         'CLS_TOP_K': 5,
+      },
+      "wandb": {
+        'project': 'swin_224_b3'
       }
     }  
