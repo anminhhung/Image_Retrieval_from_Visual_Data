@@ -29,7 +29,7 @@ import apex
 from torch.nn.parameter import Parameter
 from timm.models.vision_transformer_hybrid import HybridEmbed   
 import timm
-from utils.reranking import saveTrainFeatueToH5File, Reranking_3_2020, Reranking1_3_2019
+from utils.reranking import *
 # If tqdm error => pip install tqdm --upgrade
 #MODEL
 
@@ -159,10 +159,16 @@ def main(use_reranking_method = "new"):
     print(PRODS_M)
     print('-'*30, "PREDS_M",'-'*30)
     print(PREDS_M)
+  elif use_reranking_method=='top1_shopee':
+    reranking = Reranking1_Shoppe()
+    # Remember add feats_train and feats_test
+    threshes = [0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8]
+    result_emb, match_index_lst = reranking.iterative_neighborhood_blending(feats_train, threshes,k_neighbors=51)
+    print(match_index_lst)
   else:
     print("No Found Reranking Method")
 
-
+         
 if __name__ == '__main__': 
     args = parse_args()
     
