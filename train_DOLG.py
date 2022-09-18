@@ -156,16 +156,19 @@ def train(cfg, args):
     if cfg['train']['use_amp']:
         model, optimizer = amp.initialize(model, optimizer, opt_level="O1")
     
+    best_fitness = 0.0
     # load pretrained
     if args.checkpoint:
         print('-------Load Checkpoint-------')
+        cfg['train']['model_dir'] = '/'.join(args.checkpoint.split('/')[:-1])
+        args.exist_ok = True
         checkpoint = torch.load(args.checkpoint,  map_location='cuda:{}'.format(cfg['train']['local_rank']))
         cfg['train']['start_from_epoch'] = checkpoint['epoch'] + 1
+        best_fitness = checkpoint['best_fitness']
         state_dict = checkpoint['model_state_dict']
         state_dict = {k[7:] if k.startswith(
             'module.') else k: state_dict[k] for k in state_dict.keys()}
         model.load_state_dict(state_dict, strict=True)
-        args.exist_ok = True
         del checkpoint, state_dict
         torch.cuda.empty_cache()
         import gc
@@ -179,17 +182,21 @@ def train(cfg, args):
     scheduler_warmup = GradualWarmupSchedulerV2(
         optimizer, multiplier=10, total_epoch=1, after_scheduler=scheduler_cosine)
 
-    # train & valid loop
-    gap_m_max = 0
+    # Directories
     model_path = increment_path(Path(cfg['train']['model_dir']), exist_ok=args.exist_ok)
     os.makedirs(model_path, exist_ok=True)
+    last = os.path.join(model_path, 'last.pth')
+    best = os.path.join(model_path, 'best.pth')
+
+     # train & valid loop
+    gap_m_max = 0
     for epoch in range(cfg['train']['start_from_epoch'], cfg['train']['n_epochs']+1):
         print(time.ctime(), 'Epoch:', epoch)
         scheduler_warmup.step(epoch - 1)       
         
         train_loss = train_epoch(model, train_loader, optimizer, criterion)
         val_loss, acc_m, gap_m = val_epoch(model, valid_loader, criterion)
-
+        
         content = time.ctime() + ' ' + \
                 f'Epoch {epoch}, lr: {optimizer.param_groups[0]["lr"]:.7f}, \
                 train loss: {(train_loss):.5f}, valid loss: {(val_loss):.5f}, acc_m: {(acc_m):.6f}, gap_m: {(gap_m):.6f}.'
@@ -198,25 +205,30 @@ def train(cfg, args):
         if "wandb" in cfg:
             wandb.log({'train_loss': train_loss, 'val_loss': val_loss, 'acc_m': acc_m, 'gap_m': gap_m})
             wandb.watch(model)
-  
+
+        if gap_m > best_fitness:
+            best_fitness = gap_m
+
+        ckpt = {'epoch': epoch,
+                'best_fitness': best_fitness,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict()}
+
+        torch.save(ckpt, last)
+        if best_fitness == gap_m:
+            print(f"Save best epoch: {epoch}")
+            torch.save(ckpt, best)
         if epoch % cfg['train']['save_per_epoch'] == 0:
             save_dir = os.path.join(model_path, 
                             "dolg_{}_{}.pth".format(cfg['train']['model_name'], epoch))
             print('gap_m_max ({:.6f} --> {:.6f}). Saving model to {}'.format(gap_m_max, gap_m, save_dir))
-            torch.save({
-                'epoch': epoch,
-                'model_state_dict': model.state_dict(),
-                'optimizer_state_dict': optimizer.state_dict(),
-            }, save_dir)
+            torch.save(ckpt, save_dir)
             gap_m_max = gap_m
       
     if cfg['train']['save_per_epoch'] == False:
-        save_dir = increment_path(model_path, exist_ok=args.exist_ok)  # increment run
-        torch.save({
-            'epoch': epoch,
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-        }, os.path.join(save_dir, 'dolg_{}.pth'.format(cfg['train']['model_name'])))
+        save_dir = os.path.join(model_path, 
+                            "dolg_{}.pth".format(cfg['train']['model_name']))
+        torch.save(ckpt, save_dir)
 
 if __name__ == '__main__':
     args = parse_args()
