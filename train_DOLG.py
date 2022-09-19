@@ -46,7 +46,8 @@ def parse_args():
     parser.add_argument('--valCSVPath', type=str, required=True)
     parser.add_argument('--checkpoint', nargs='?', const=True, default=False, help='resume most recent training')
     parser.add_argument('--exist_ok', action='store_true', help='existing project/name ok, do not increment')
-
+    parser.add_argument('--use_wandb', action='store_true')
+    
     args, _ = parser.parse_known_args()
     return args
 
