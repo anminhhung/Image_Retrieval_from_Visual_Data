@@ -38,7 +38,7 @@ python -u -m torch.distributed.launch --nproc_per_node=1 \
           --config_name dolg_b5_step3 \
           --trainCSVPath ./data/train/train_list.txt \
           --valCSVPath ./data/train/test_train_list.txt \
-          --use_wandb True
+          --use_wandb
 ```
 
 **Load Trained Model and Continue Training**
@@ -49,7 +49,7 @@ python -u -m torch.distributed.launch --nproc_per_node=1 \
           --trainCSVPath ./data/train/train_list.txt \
           --valCSVPath ./data/train/test_train_list.txt \
           --checkpoint './run/saved/dolg_efficientnet_b5_ns_step3_2.pth' \
-          --use_wandb True
+          --use_wandb
 ```
           
 **Train Swin Transformer**
@@ -59,7 +59,7 @@ python -u -m torch.distributed.launch \
           --config_name swin_224_b5 \
           --trainCSVPath ./dataset/data/train/train_list.txt \
           --valCSVPath ./data/train/val_list.txt \
-          --use_wandb True
+          --use_wandb
 ```
 
 **Load Trained Model and Continue Training**
@@ -70,7 +70,7 @@ python -u -m torch.distributed.launch --nproc_per_node=1 \
           --trainCSVPath ./data/train/train_list.txt \
           --valCSVPath ./data/train/val_list.txt \
           --checkpoint './run/saved/swin_224_b3_efficientnet_b5_ns.pth' \
-          --use_wandb True
+          --use_wandb
 ```
 **Note**- Source: https://github.com/haqishen/Google-Landmark-Recognition-2020-3rd-Place-Solution 
 
