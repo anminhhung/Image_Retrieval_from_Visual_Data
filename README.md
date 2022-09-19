@@ -71,7 +71,7 @@ python -u -m torch.distributed.launch --nproc_per_node=1 \
           --valCSVPath ./data/train/val_list.txt \
           --checkpoint './run/saved/swin_224_b3_efficientnet_b5_ns.pth' \
           --use_wandb True
-
+```
 **Note**- Source: https://github.com/haqishen/Google-Landmark-Recognition-2020-3rd-Place-Solution 
 
 **[Optional]**
