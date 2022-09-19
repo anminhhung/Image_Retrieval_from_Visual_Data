@@ -86,6 +86,7 @@ wandb.login()
 **Predict**
 
 **Predict DOLG with reranking method ("top1_3_2019","top3_2020","top1_shopee")**
+
 ```
 python predict_DOLG.py \
   --config_name dolg_b7_step3 \
@@ -99,6 +100,7 @@ python predict_DOLG.py \
 ```
 
 **Predict Swin Transformer with reranking method ("top1_3_2019","top3_2020","top1_shopee")**
+
 ```
 python predict_swin.py \
   --config_name swin_224_b5 \
