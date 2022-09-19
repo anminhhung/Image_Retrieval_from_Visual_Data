@@ -37,7 +37,8 @@ python -u -m torch.distributed.launch --nproc_per_node=1 \
           train_DOLG.py \
           --config_name dolg_b5_step3 \
           --trainCSVPath ./data/train/train_list.txt \
-          --valCSVPath ./data/train/test_train_list.txt
+          --valCSVPath ./data/train/test_train_list.txt \
+          --use_wandb True
 ```
 
 **Load Trained Model and Continue Training**
@@ -47,14 +48,8 @@ python -u -m torch.distributed.launch --nproc_per_node=1 \
           --config_name dolg_b5_step3 \
           --trainCSVPath ./data/train/train_list.txt \
           --valCSVPath ./data/train/test_train_list.txt \
-          --checkpoint './run/saved/dolg_efficientnet_b5_ns_step3_2.pth'
-```
-
-**[Optional]**
-```
-!pip install wandb -qqq
-import wandb
-wandb.login()
+          --checkpoint './run/saved/dolg_efficientnet_b5_ns_step3_2.pth' \
+          --use_wandb True
 ```
           
 **Train Swin Transformer**
@@ -63,12 +58,30 @@ python -u -m torch.distributed.launch \
           --nproc_per_node=1 train_swin.py \
           --config_name swin_224_b5 \
           --trainCSVPath ./dataset/data/train/train_list.txt \
+          --valCSVPath ./data/train/val_list.txt \
           --use_wandb True
 ```
-**Note**- Add --use_wandb to use wandb to visuallize while training. If --use_wandb is True, you have to enter your API key to login. Check https://wandb.ai/authorize to get API key.
+
+**Load Trained Model and Continue Training**
+```
+python -u -m torch.distributed.launch --nproc_per_node=1 \
+          train_swin.py \
+          --config_name swin_224_b5 \
+          --trainCSVPath ./data/train/train_list.txt \
+          --valCSVPath ./data/train/val_list.txt \
+          --checkpoint './run/saved/swin_224_b3_efficientnet_b5_ns.pth' \
+          --use_wandb True
 
 **Note**- Source: https://github.com/haqishen/Google-Landmark-Recognition-2020-3rd-Place-Solution 
 
+**[Optional]**
+```
+!pip install wandb -qqq
+import wandb
+wandb.login()
+```
+
+**Note**- To use wandb to visuallize while training. You have to enter your API key to login. Check https://wandb.ai/authorize to get API key.
 
 **Predict**
 

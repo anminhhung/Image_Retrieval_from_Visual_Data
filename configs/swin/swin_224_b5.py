@@ -48,8 +48,5 @@ cfg_swin_224_b5 = {
         'out_dim': 17,
         'TOP_K': 5,
         'CLS_TOP_K': 5,
-      },
-      "wandb": {
-        'project': 'swin_224_b5'
       }
     }  

@@ -203,7 +203,7 @@ def train(cfg, args):
                 train loss: {(train_loss):.5f}, valid loss: {(val_loss):.5f}, acc_m: {(acc_m):.6f}, gap_m: {(gap_m):.6f}.'
         print(content)
 
-        if "wandb" in cfg:
+        if args.use_wandb:
             wandb.log({'train_loss': train_loss, 'val_loss': val_loss, 'acc_m': acc_m, 'gap_m': gap_m})
             wandb.watch(model)
 
@@ -236,8 +236,8 @@ if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES'] = cfg['train']['CUDA_VISIBLE_DEVICES']
     set_seed(0)
 
-    if "wandb" in cfg:
-        wandb.init(project=cfg['wandb']['project'])
+    if args.use_wandb:
+        wandb.init(project=args.config_name)
     
     if cfg['train']['CUDA_VISIBLE_DEVICES'] != '-1':
         torch.backends.cudnn.benchmark = True

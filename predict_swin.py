@@ -162,7 +162,7 @@ def main(use_reranking_method = "new"):
   elif use_reranking_method=='top1_shopee':
     reranking = Reranking1_Shoppe()
     # Remember add feats_train and feats_test
-    threshes = [0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8]
+    threshes = [0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8] # Adjust thresholds
     result_emb, match_index_lst = reranking.iterative_neighborhood_blending(feats_train, threshes,k_neighbors=51)
     print(match_index_lst)
   else:

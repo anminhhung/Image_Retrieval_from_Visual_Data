@@ -45,7 +45,7 @@ def parse_args():
     parser.add_argument('--valCSVPath', type=str, required=True)
     parser.add_argument('--checkpoint', nargs='?', const=True, default=False, help='resume most recent training')
     parser.add_argument('--exist_ok', action='store_true', help='existing project/name ok, do not increment')
-
+    parser.add_argument('--use_wandb', action='store_true')
     args, _ = parser.parse_known_args()
     return args
 
@@ -196,7 +196,7 @@ def train(cfg, args):
         content = time.ctime() + ' ' + \
             f'Epoch {epoch}, lr: {optimizer.param_groups[0]["lr"]:.7f}, train loss: {train_loss:.5f}, valid loss: {(val_loss):.5f}, acc_m: {(acc_m):.6f}, gap_m: {(gap_m):.6f}.'
         print(content)
-        if "wandb" in cfg:
+        if args.use_wandb:
             wandb.log({'loss_train':train_loss,
                         'loss_val':val_loss,
                         'accuracy': acc_m,
@@ -236,7 +236,7 @@ if __name__ == '__main__':
         torch.distributed.init_process_group(
             backend='nccl', init_method='env://')
         cudnn.benchmark = True
-    if "wandb" in cfg:
-        wandb.init(project=cfg['wandb']['project'])
+    if args.use_wandb:
+        wandb.init(project=args.config_name)
     
     train(cfg, args)

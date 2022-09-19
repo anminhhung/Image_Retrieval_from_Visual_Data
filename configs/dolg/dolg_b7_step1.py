@@ -44,8 +44,6 @@ cfg_b7_step1 = {
         "out_dim": 17,
         "TOP_K": 5,
         "CLS_TOP_K": 5,
-      },
-    "wandb": {
-        'project': 'dolg_b7_step1'
       }
+    
 }
