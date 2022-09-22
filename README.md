@@ -1,4 +1,4 @@
-<h1>HCM AI CHALLENGE 2022 - Event Retrieval from Visual Data</h1>
+<h1>Image Retrieval from Visual Data</h1>
 
 ---
 ## To do task 
